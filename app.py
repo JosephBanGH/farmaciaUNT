@@ -30,11 +30,17 @@ def main():
     show_user_profile()
     
     # Navegación principal
+    # Determinar opciones de menú según el perfil
+    menu_options = ["Dashboard", "Inventario", "Punto de Venta", "Reportes"]
+    menu_icons = ["house", "box", "cash-coin", "graph-up"]
+    if st.session_state['user']['perfil'] == 'Administrador':
+        menu_options.append("Administración")
+        menu_icons.append("gear")
     with st.sidebar:
         selected = option_menu(
             menu_title="Menú Principal",
-            options=["Dashboard", "Inventario", "Punto de Venta", "Reportes", "Administración"],
-            icons=["house", "box", "cash-coin", "graph-up", "gear"],
+            options=menu_options,
+            icons=menu_icons,
             default_index=0,
         )
     
