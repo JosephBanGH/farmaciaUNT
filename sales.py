@@ -41,6 +41,9 @@ def punto_venta():
                                     'cantidad': cantidad
                                 })
                             st.success("Producto agregado al carrito")
+                            st.rerun()
+            if st.session_state['user']['perfil'] in ['Administrador', 'Farmacéutico']:
+                st.button("Mandar a caja", on_click=lambda: st.rerun(), icon="👛")
         else:
             st.info("No hay medicamentos disponibles")
     
