@@ -94,6 +94,20 @@ BEGIN
 END$$
 DELIMITER ;
 
+-- SP para actualizar usuario
+DELIMITER $$
+CREATE PROCEDURE sp_actualizar_usuario(
+    IN p_username VARCHAR(50),
+    IN p_email VARCHAR(100),
+    IN p_perfil ENUM('Administrador', 'Farmacéutico', 'Cajero', 'Cliente')
+)
+BEGIN
+    UPDATE usuarios
+    SET email=p_email, perfil=p_perfil
+    where username=p_username;
+END$$
+DELIMITER ;
+
 -- SP para actualizar stock
 DELIMITER $$
 CREATE PROCEDURE sp_actualizar_stock(

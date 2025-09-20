@@ -5,6 +5,7 @@ from inventory import gestion_inventario
 from sales import punto_venta, reportes_ventas
 from database import Database
 from registro import registro   # 👈 importar el registro
+from users import perfil,administracion
 
 def main():
     # Configuración de la página
@@ -31,11 +32,14 @@ def main():
     
     # Navegación principal
     # Determinar opciones de menú según el perfil
-    menu_options = ["Dashboard", "Inventario", "Punto de Venta", "Reportes"]
-    menu_icons = ["house", "box", "cash-coin", "graph-up"]
+    menu_options = ["Perfil","Dashboard", "Medicamentos", "Inventario", "Punto de Venta", "Pedidos", "Reportes"]
+    menu_icons = ["person-circle","house", "capsule", "box", "cash-coin", "send", "graph-up"]
     if st.session_state['user']['perfil'] == 'Administrador':
         menu_options.append("Administración")
         menu_icons.append("gear")
+    elif st.session_state['user']['perfil'] == 'Farmacéutico':
+        menu_options.remove("Pedidos")
+        menu_icons.remove("send")
     with st.sidebar:
         selected = option_menu(
             menu_title="Menú Principal",
@@ -45,7 +49,9 @@ def main():
         )
     
     # Contenido según la selección
-    if selected == "Dashboard":
+    if selected == "Perfil":
+        perfil()
+    elif selected == "Dashboard":
         st.title("Dashboard - Sistema de Gestión de Farmacias")
         
         db = Database()
@@ -89,57 +95,7 @@ def main():
         reportes_ventas()
     
     elif selected == "Administración":
-        st.title("Administración del Sistema")
-        
-        # Solo administradores pueden acceder a esta sección
-        if st.session_state['user']['perfil'] != 'Administrador':
-            st.warning("No tienes permisos para acceder a esta sección")
-            return
-        
-        tab1, tab2, tab3 = st.tabs(["Usuarios", "Proveedores", "Configuración"])
-        
-        with tab1:
-            st.subheader("Gestión de Usuarios")
-            db = Database()
-            
-            with st.form("nuevo_usuario"):
-                col1, col2 = st.columns(2)
-                with col1:
-                    nuevo_usuario = st.text_input("Nombre de usuario")
-                    email = st.text_input("Email")
-                with col2:
-                    nueva_contrasena = st.text_input("Contraseña", type="password")
-                    perfil = st.selectbox("Perfil", ["Administrador", "Farmacéutico", "Cajero", "Cliente"])
-                
-                if st.form_submit_button("Crear Usuario"):
-                    if db.sp_crear_usuario(nuevo_usuario, nueva_contrasena, email, perfil):
-                        st.success("Usuario creado correctamente")
-                    else:
-                        st.error("Error al crear el usuario")
-            
-            st.subheader("Usuarios Existentes")
-            usuarios = db.execute_query("SELECT * FROM usuarios WHERE activo = TRUE ORDER BY username")
-            for usuario in usuarios:
-                st.write(f"**{usuario['username']}** - {usuario['perfil']} - {usuario['email']}")
-        
-        with tab2:
-            st.subheader("Gestión de Proveedores")
-            db = Database()
-            proveedores = db.get_proveedores()
-            
-            if proveedores:
-                for prov in proveedores:
-                    with st.expander(prov['nombre']):
-                        st.write(f"**Contacto:** {prov['contacto']}")
-                        st.write(f"**Teléfono:** {prov['telefono']}")
-                        st.write(f"**Email:** {prov['email']}")
-                        st.write(f"**Dirección:** {prov['direccion']}")
-            else:
-                st.info("No hay proveedores registrados")
-        
-        with tab3:
-            st.subheader("Configuración del Sistema")
-            st.info("Aquí puedes configurar parámetros generales del sistema")
+        administracion()
 
 if __name__ == "__main__":
     main()

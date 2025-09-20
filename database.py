@@ -101,7 +101,16 @@ class Database:
             (username, hashed_password, email, perfil),
             True
         )
-    
+    def sp_actualizar_usuario(self, username, email, perfil):
+        # """Actualiza usuario con hash bcrypt"""
+        # hashed_password = self.hash_password(password)
+        return self.execute_update(
+            'sp_actualizar_usuario',
+            (username, email, perfil),
+            True
+        )
+
+
     def sp_actualizar_stock(self, medicamento_id, cantidad, tipo, motivo, usuario_id):
         # tipo = 'entrada' o 'salida' (VARCHAR, no ENUM)
         return self.execute_update(
