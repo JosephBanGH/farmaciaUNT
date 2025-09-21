@@ -40,6 +40,9 @@ def main():
     elif st.session_state['user']['perfil'] == 'Farmacéutico':
         menu_options.remove("Pedidos")
         menu_icons.remove("send")
+    elif st.session_state['user']['perfil'] == 'Cajero':
+        menu_options = ["Perfil","Dashboard", "Pagos", "Reportes"]
+        menu_icons = ["person-circle","house", "coin", "graph-up"]
     with st.sidebar:
         selected = option_menu(
             menu_title="Menú Principal",
