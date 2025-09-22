@@ -82,39 +82,3 @@ def punto_venta():
                 st.experimental_rerun()
         else:
             st.info("El carrito está vacío")
-
-def reportes_ventas():
-    st.header("Reportes de Ventas")
-    
-    db = Database()
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        fecha_inicio = st.date_input("Fecha Inicio", value=datetime.now().replace(day=1))
-    with col2:
-        fecha_fin = st.date_input("Fecha Fin", value=datetime.now())
-    
-    if st.button("Generar Reporte"):
-        ventas = db.sp_obtener_reportes_ventas(fecha_inicio, fecha_fin)
-        
-        if ventas:
-            st.subheader(f"Ventas del {fecha_inicio} al {fecha_fin}")
-            
-            total_ventas = sum(venta['total'] for venta in ventas)
-            total_impuestos = sum(venta['impuesto'] for venta in ventas)
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                st.metric("Total Ventas", f"${total_ventas:.2f}")
-            with col2:
-                st.metric("Total Impuestos", f"${total_impuestos:.2f}")
-            
-            for venta in ventas:
-                with st.expander(f"Venta #{venta['id']} - ${venta['total']:.2f} - {venta['fecha_venta'].strftime('%Y-%m-%d %H:%M')}"):
-                    st.write(f"**Vendedor:** {venta['vendedor']}")
-                    if venta['cliente']:
-                        st.write(f"**Cliente:** {venta['cliente']}")
-                    st.write(f"**Total:** ${venta['total']:.2f}")
-                    st.write(f"**Impuestos:** ${venta['impuesto']:.2f}")
-        else:
-            st.info("No hay ventas en el período seleccionado")

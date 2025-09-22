@@ -2,10 +2,11 @@ import streamlit as st
 from streamlit_option_menu import option_menu
 from user.auth import login, show_user_profile, logout
 from menu.inventory import gestion_inventario
-from menu.sales import punto_venta, reportes_ventas
+from menu.sales import punto_venta
 from database.database import Database
 from user.registro import registro   # 👈 importar el registro
 from user.users import perfil,administracion
+from menu.reports import dashboard, reportes_ventas
 
 def main():
     # Configuración de la página
@@ -57,38 +58,7 @@ def main():
     if selected == "Perfil":
         perfil()
     elif selected == "Dashboard":
-        st.title("Dashboard - Sistema de Gestión de Farmacias")
-        
-        db = Database()
-        
-        # Métricas principales
-        col1, col2, col3, col4 = st.columns(4)
-        
-        total_medicamentos = len(db.get_medicamentos())
-        total_stock = sum(med['stock'] for med in db.get_medicamentos())
-        medicamentos_bajo_stock = len([m for m in db.get_medicamentos() if m['stock'] <= m['stock_minimo']])
-        alertas_vencimiento = len(db.sp_alertas_vencimiento())
-        
-        with col1:
-            st.metric("Total Medicamentos", total_medicamentos)
-        with col2:
-            st.metric("Total en Stock", total_stock)
-        with col3:
-            st.metric("Bajo Stock", medicamentos_bajo_stock, delta_color="inverse")
-        with col4:
-            st.metric("Próximos a Vencer", alertas_vencimiento, delta_color="inverse")
-        
-        # Alertas importantes
-        st.subheader("Alertas Importantes")
-        
-        if medicamentos_bajo_stock > 0:
-            st.warning(f"{medicamentos_bajo_stock} medicamentos tienen stock bajo")
-        
-        if alertas_vencimiento > 0:
-            st.error(f"{alertas_vencimiento} medicamentos próximos a vencer")
-        
-        if medicamentos_bajo_stock == 0 and alertas_vencimiento == 0:
-            st.success("No hay alertas importantes")
+        dashboard();
     
     elif selected == "Inventario":
         gestion_inventario()
