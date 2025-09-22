@@ -1,11 +1,11 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
-from auth import login, show_user_profile, logout
-from inventory import gestion_inventario
-from sales import punto_venta, reportes_ventas
-from database import Database
-from registro import registro   # 👈 importar el registro
-from users import perfil,administracion
+from user.auth import login, show_user_profile, logout
+from menu.inventory import gestion_inventario
+from menu.sales import punto_venta, reportes_ventas
+from database.database import Database
+from user.registro import registro   # 👈 importar el registro
+from user.users import perfil,administracion
 
 def main():
     # Configuración de la página
@@ -34,7 +34,7 @@ def main():
     # Determinar opciones de menú según el perfil
     menu_options = ["Perfil","Dashboard", "Medicamentos", "Inventario", "Punto de Venta", "Pedidos", "Reportes"]
     menu_icons = ["person-circle","house", "capsule", "box", "cash-coin", "send", "graph-up"]
-    #ADMINISTRADOR POSEE TODAS LAS OPCIONES
+    #Administrador con todas las opciones
     if st.session_state['user']['perfil'] == 'Administrador':
         menu_options = ["Perfil","Dashboard", "Administración", "Medicamentos", "Inventario", "Punto de Venta", "Pedidos", "Pagos", "Reclamos y Devoluciones", "Cierre de caja", "Reportes"]
         menu_icons = ["person-circle","house", "person-circle","capsule", "box", "cash-coin", "send", "coin", "ban", "x-lg", "graph-up"]
@@ -44,6 +44,7 @@ def main():
     elif st.session_state['user']['perfil'] == 'Cajero':
         menu_options = ["Perfil","Dashboard", "Pagos", "Reclamos y Devoluciones", "Cierre de caja", "Reportes"]
         menu_icons = ["person-circle","house", "coin", "ban", "x-lg", "graph-up"]
+    
     with st.sidebar:
         selected = option_menu(
             menu_title="Menú Principal",

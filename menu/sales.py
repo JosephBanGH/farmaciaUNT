@@ -1,5 +1,5 @@
 import streamlit as st
-from database import Database
+from database.database import Database
 import json
 from datetime import datetime
 
