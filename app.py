@@ -3,10 +3,11 @@ from streamlit_option_menu import option_menu
 from views.user.auth import login, show_user_profile, logout
 from views.menu.inventory import gestion_inventario
 from views.menu.sales import punto_venta
-from controladores.database import Database
+from models.modelo import Database
 from views.user.registro import registro   # 👈 importar el registro
 from views.user.users import perfil,administracion
 from views.menu.reports import dashboard, reportes_ventas
+from controladores.controlador import verificar_base_datos
 
 def main():
     # Configuración de la página
