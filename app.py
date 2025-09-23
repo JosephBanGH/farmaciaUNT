@@ -1,12 +1,12 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
-from user.auth import login, show_user_profile, logout
-from menu.inventory import gestion_inventario
-from menu.sales import punto_venta
+from views.user.auth import login, show_user_profile, logout
+from views.menu.inventory import gestion_inventario
+from views.menu.sales import punto_venta
 from database.database import Database
-from user.registro import registro   # 👈 importar el registro
-from user.users import perfil,administracion
-from menu.reports import dashboard, reportes_ventas
+from views.user.registro import registro   # 👈 importar el registro
+from views.user.users import perfil,administracion
+from views.menu.reports import dashboard, reportes_ventas
 
 def main():
     # Configuración de la página
@@ -45,7 +45,7 @@ def main():
     elif st.session_state['user']['perfil'] == 'Cajero':
         menu_options = ["Perfil","Dashboard", "Pagos", "Reclamos y Devoluciones", "Cierre de caja", "Reportes"]
         menu_icons = ["person-circle","house", "coin", "ban", "x-lg", "graph-up"]
-    
+    menu_icons.remove
     with st.sidebar:
         selected = option_menu(
             menu_title="Menú Principal",
