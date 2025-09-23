@@ -1,5 +1,5 @@
 import streamlit as st
-from database.database import Database
+from controladores.database import Database
 
 def registro():
     st.title("Registro de Usuario")

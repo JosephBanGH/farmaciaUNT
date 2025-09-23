@@ -1,5 +1,5 @@
 import streamlit as st
-from database.database import Database
+from controladores.database import Database
 from datetime import datetime
 
 def gestion_inventario():

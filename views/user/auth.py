@@ -1,5 +1,5 @@
 import streamlit as st
-from database.database import Database
+from controladores.database import Database
 
 def login():
     st.title("Inicio de Sesión - Sistema de Gestión de Farmacias")

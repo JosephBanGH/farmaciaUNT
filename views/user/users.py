@@ -1,6 +1,6 @@
 import streamlit as st
 from user.auth import logout
-from database.database import Database
+from controladores.database import Database
 
 def perfil():
     st.header("Perfil de Usuario")
