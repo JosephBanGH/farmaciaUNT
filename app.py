@@ -33,15 +33,15 @@ def main():
     
     # Navegación principal
     # Determinar opciones de menú según el perfil
-    menu_options = ["Perfil","Dashboard", "Medicamentos", "Inventario", "Punto de Venta", "Pedidos", "Reportes"]
-    menu_icons = ["person-circle","house", "capsule", "box", "cash-coin", "send", "graph-up"]
+    menu_options = ["Perfil","Dashboard", "Medicamentos", "Inventario", "Punto de Venta", "Reportes"]
+    menu_icons = ["person-circle","house", "capsule", "box", "cash-coin", "graph-up"]
     #Administrador con todas las opciones
     if st.session_state['user']['perfil'] == 'Administrador':
         menu_options = ["Perfil","Dashboard", "Administración", "Medicamentos", "Inventario", "Punto de Venta", "Pedidos", "Pagos", "Reclamos y Devoluciones", "Cierre de caja", "Reportes"]
         menu_icons = ["person-circle","house", "person-circle","capsule", "box", "cash-coin", "send", "coin", "ban", "x-lg", "graph-up"]
-    elif st.session_state['user']['perfil'] == 'Farmacéutico':
-        menu_options.remove("Pedidos")
-        menu_icons.remove("send")
+    # elif st.session_state['user']['perfil'] == 'Farmacéutico':
+    #     menu_options.remove("Pedidos")
+    #     menu_icons.remove("send")
     elif st.session_state['user']['perfil'] == 'Cajero':
         menu_options = ["Perfil","Dashboard", "Pagos", "Reclamos y Devoluciones", "Cierre de caja", "Reportes"]
         menu_icons = ["person-circle","house", "coin", "ban", "x-lg", "graph-up"]
