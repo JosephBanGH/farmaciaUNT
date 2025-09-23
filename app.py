@@ -45,7 +45,6 @@ def main():
     elif st.session_state['user']['perfil'] == 'Cajero':
         menu_options = ["Perfil","Dashboard", "Pagos", "Reclamos y Devoluciones", "Cierre de caja", "Reportes"]
         menu_icons = ["person-circle","house", "coin", "ban", "x-lg", "graph-up"]
-    menu_icons.remove
     with st.sidebar:
         selected = option_menu(
             menu_title="Menú Principal",
