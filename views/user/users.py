@@ -1,5 +1,5 @@
 import streamlit as st
-from user.auth import logout
+from .auth import logout
 from controladores.database import Database
 
 def perfil():
