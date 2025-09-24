@@ -24,8 +24,6 @@ CREATE TABLE medicamentos (
     precio DECIMAL(10, 2) NOT NULL,
     stock INT NOT NULL DEFAULT 0,
     stock_minimo INT NOT NULL DEFAULT 10,
-    lote VARCHAR(50),
-    fecha_vencimiento DATE,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     activo BOOLEAN DEFAULT TRUE
 );
@@ -77,7 +75,18 @@ CREATE TABLE proveedores (
     direccion TEXT,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
+CREATE TABLE lotes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    medicamento_id INT NOT NULL,
+    proveedor_id INT NOT NULL,
+    numero_lote VARCHAR(50) NOT NULL,
+    fecha_vencimiento DATE NOT NULL,
+    cantidad_inicial INT NOT NULL,
+    cantidad_actual INT NOT NULL,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (medicamento_id) REFERENCES medicamentos(id),
+    FOREIGN KEY (proveedor_id) REFERENCES proveedores(id)
+);
 -- Procedimientos almacenados
 
 -- SP para crear usuario
@@ -231,27 +240,33 @@ DELIMITER $$
 CREATE PROCEDURE sp_alertas_vencimiento()
 BEGIN
     SELECT 
-        id,
-        nombre,
-        lote,
-        fecha_vencimiento,
-        DATEDIFF(fecha_vencimiento, CURDATE()) AS dias_restantes
-    FROM medicamentos 
-    WHERE fecha_vencimiento IS NOT NULL 
-      AND fecha_vencimiento <= DATE_ADD(CURDATE(), INTERVAL 30 DAY)
-      AND activo = TRUE
-    ORDER BY fecha_vencimiento ASC;
+        l.id AS lote_id,
+        m.nombre AS medicamento,
+        l.numero_lote,
+        l.fecha_vencimiento,
+        DATEDIFF(l.fecha_vencimiento, CURDATE()) AS dias_restantes
+    FROM lotes l
+    INNER JOIN medicamentos m ON l.medicamento_id = m.id
+    WHERE l.fecha_vencimiento IS NOT NULL 
+      AND l.fecha_vencimiento <= DATE_ADD(CURDATE(), INTERVAL 30 DAY)
+    ORDER BY l.fecha_vencimiento ASC;
 END$$
 DELIMITER ;
 
 -- Insertar datos de ejemplo
 
-INSERT INTO medicamentos (nombre, descripcion, principio_activo, laboratorio, precio, stock, stock_minimo, lote, fecha_vencimiento) VALUES
-('Paracetamol 500mg', 'Analgésico y antipirético', 'Paracetamol', 'Genfar', 5.50, 100, 20, 'LOT123', '2024-12-31'),
-('Ibuprofeno 400mg', 'Antiinflamatorio no esteroideo', 'Ibuprofeno', 'Bayer', 7.80, 50, 15, 'LOT456', '2024-10-15'),
-('Amoxicilina 500mg', 'Antibiótico de amplio espectro', 'Amoxicilina', 'Pfizer', 12.90, 30, 10, 'LOT789', '2024-08-20'),
-('Loratadina 10mg', 'Antihistamínico', 'Loratadina', 'Sanofi', 8.25, 80, 25, 'LOT101', '2025-03-15');
+INSERT INTO medicamentos (nombre, descripcion, principio_activo, laboratorio, precio, stock, stock_minimo) VALUES
+('Paracetamol 500mg', 'Analgésico y antipirético', 'Paracetamol', 'Genfar', 5.50, 100, 20),
+('Ibuprofeno 400mg', 'Antiinflamatorio no esteroideo', 'Ibuprofeno', 'Bayer', 7.80, 50, 15),
+('Amoxicilina 500mg', 'Antibiótico de amplio espectro', 'Amoxicilina', 'Pfizer', 12.90, 30, 10),
+('Loratadina 10mg', 'Antihistamínico', 'Loratadina', 'Sanofi', 8.25, 80, 25);
 
 INSERT INTO proveedores (nombre, contacto, telefono, email, direccion) VALUES
 ('Distribuidora Médica S.A.', 'Juan Pérez', '1234-5678', 'ventas@dmedical.com', 'Av. Principal 123, Ciudad'),
 ('Farmacéutica Nacional', 'María González', '8765-4321', 'contacto@farmanacional.com', 'Calle Secundaria 456, Ciudad');
+
+INSERT INTO lotes(medicamento_id, proveedor_id, numero_lote, fecha_vencimiento, cantidad_inicial, cantidad_actual) VALUES
+(1, 1, 'L001', '2024-12-31', 100, 100),
+(2, 2, 'L002', '2025-06-30', 50, 50),
+(3, 1, 'L003', '2024-11-30', 30, 30),
+(4, 2, 'L004', '2025-01-15', 80, 80);
