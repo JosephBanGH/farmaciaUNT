@@ -71,29 +71,17 @@ def gestion_inventario():
                     st.error("Error al agregar medicamento y lote")
 
     # -------------------------------
-    # TAB 3: Actualizar Stock
+    # TAB 3: Actualizar Stock (Automático)
     # -------------------------------
     with tab3:
-        st.subheader("Actualizar Stock por Lote")
-        lotes = db.get_lotes_medicamentos()
-        if lotes:
-            options = {f"{l['nombre']} - {l['numero_lote']} (Stock: {l['cantidad_actual']})": l['id'] for l in lotes}
-            selected = st.selectbox("Seleccionar Lote", options=list(options.keys()))
-            lote_med_id = options[selected]
+        st.subheader("Actualización Automática de Stock")
+        st.info(
+            "El stock se actualiza automáticamente:\n"
+            "- Cuando llega un nuevo lote, se incrementa el stock y se registra un movimiento de entrada.\n"
+            "- Cuando se realiza una venta, se descuenta el stock y se registra un movimiento de salida por cada medicamento vendido.\n"
+            "No es necesario actualizar el stock manualmente."
+        )
 
-            tipo_movimiento = st.radio("Tipo de Movimiento", ["Entrada", "Salida"])
-            cantidad = st.number_input("Cantidad", min_value=1)
-            motivo = st.text_input("Motivo del movimiento")
-
-            if st.button("Registrar Movimiento"):
-                tipo = "entrada" if tipo_movimiento == "Entrada" else "salida"
-                if db.sp_actualizar_stock_lote(lote_med_id, cantidad, tipo, motivo, st.session_state['user']['id']):
-                    st.success("Movimiento registrado correctamente")
-                else:
-                    st.error("Error al registrar movimiento")
-        else:
-            st.info("No hay lotes en el inventario")
-    
     with tab4:
         st.subheader("Historial de Movimientos")
         movimientos = db.get_movimientos_inventario()

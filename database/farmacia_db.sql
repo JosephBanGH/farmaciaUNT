@@ -153,6 +153,38 @@ BEGIN
 END$$
 DELIMITER ;
 
+-- SP para ingresar lote y registrar movimiento
+DELIMITER $$
+CREATE PROCEDURE sp_ingresar_lote(
+    IN p_medicamento_id INT,
+    IN p_proveedor_id INT,
+    IN p_numero_lote VARCHAR(50),
+    IN p_fecha_vencimiento DATE,
+    IN p_cantidad_inicial INT,
+    IN p_usuario_id INT
+)
+BEGIN
+    DECLARE lote_id INT;
+
+    START TRANSACTION;
+
+    -- Insertar lote
+    INSERT INTO lotes (medicamento_id, proveedor_id, numero_lote, fecha_vencimiento, cantidad_inicial, cantidad_actual)
+    VALUES (p_medicamento_id, p_proveedor_id, p_numero_lote, p_fecha_vencimiento, p_cantidad_inicial, p_cantidad_inicial);
+
+    SET lote_id = LAST_INSERT_ID();
+
+    -- Actualizar stock del medicamento
+    UPDATE medicamentos SET stock = stock + p_cantidad_inicial WHERE id = p_medicamento_id;
+
+    -- Registrar movimiento de inventario
+    INSERT INTO movimientos_inventario (medicamento_id, tipo, cantidad, motivo, usuario_id)
+    VALUES (p_medicamento_id, 'entrada', p_cantidad_inicial, CONCAT('Ingreso de lote ', p_numero_lote), p_usuario_id);
+
+    COMMIT;
+END$$
+DELIMITER ;
+
 -- SP para generar venta
 DELIMITER $$
 CREATE PROCEDURE sp_generar_venta(
@@ -203,7 +235,7 @@ BEGIN
         INSERT INTO detalles_venta (venta_id, medicamento_id, cantidad, precio_unitario, subtotal)
         VALUES (v_venta_id, medicamento_id, cantidad, precio, cantidad * precio);
         
-        -- Actualizar stock usando el SP existente
+        -- Actualizar stock y registrar movimiento
         CALL sp_actualizar_stock(medicamento_id, cantidad, 'salida', 'Venta', p_usuario_id);
         
         SET i = i + 1;

@@ -69,13 +69,11 @@ class Database:
             medicamento_id = cursor.lastrowid  # id generado
 
             # 2. Insertar lote asociado
-            insert_lote = """
-            INSERT INTO lotes (medicamento_id, proveedor_id, numero_lote, fecha_vencimiento, cantidad_inicial, cantidad_actual)
-            VALUES (%s, %s, %s, %s, %s, %s)
-            """
-            cursor.execute(insert_lote, (
-                medicamento_id, proveedor_id, numero_lote, fecha_vencimiento, cantidad_inicial, cantidad_inicial
-            ))
+            self.execute_update(
+            'sp_INGRESAR_LOTE',
+                (medicamento_id, proveedor_id, numero_lote, fecha_vencimiento, cantidad_inicial, cantidad_inicial),
+                True
+            )
 
             self.connection.commit()
             cursor.close()
