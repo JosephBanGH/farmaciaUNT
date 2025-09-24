@@ -12,34 +12,38 @@ def gestion_inventario():
     
     with tab1:
         st.subheader("Lista de Medicamentos")
-        medicamentos = db.get_medicamentos()
-        
+        medicamentos = db.get_medicamentos_con_lotes()  # <-- Nuevo método
+
         if medicamentos:
             for med in medicamentos:
-                with st.expander(f"{med['nombre']} - Stock: {med['stock']}"):
-                    st.write(f"**Principio Activo:** {med['principio_activo']}")
-                    st.write(f"**Laboratorio:** {med['laboratorio']}")
-                    st.write(f"**Precio:** ${med['precio']:.2f}")
-                    st.write(f"**Stock Mínimo:** {med['stock_minimo']}")
-                    st.write(f"**Lote:** {med['lote']}")
-                    if med['fecha_vencimiento']:
+                if med['cantidad_actual'] != None:
+                    with st.expander(f"{med['nombre']} - {med['numero_lote']} - Stock: {med['cantidad_actual']}"):
+                        st.write(f"**Principio Activo:** {med['principio_activo']}")
+                        st.write(f"**Laboratorio:** {med['laboratorio']}")
+                        st.write(f"**Precio:** ${med['precio']:.2f}")
+                        st.write(f"**Proveedor:** {med['proveedor']}")
+                        st.write(f"**Stock Mínimo:** {med['stock_minimo']}")
+                        st.write(f"**Lote:** {med['numero_lote']}")
                         st.write(f"**Fecha Vencimiento:** {med['fecha_vencimiento']}")
-                    
-                    # Botones de acción
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        if st.button("Editar", key=f"edit_{med['id']}"):
-                            st.session_state['editar_medicamento'] = med['id']
-                    with col2:
-                        if st.button("Eliminar", key=f"delete_{med['id']}"):
-                            if db.delete_medicamento(med['id']):
-                                st.success("Medicamento eliminado correctamente")
-                                st.experimental_rerun()
-                            else:
-                                st.error("Error al eliminar el medicamento")
+
+                        # Botones de acción
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            if st.button("Editar", key=f"edit_{med['lote_id']}"):
+                                st.session_state['editar_lote_med'] = med['lote_id']
+                        with col2:
+                            if st.button("Eliminar", key=f"delete_{med['lote_id']}"):
+                                if db.delete_lote_medicamento(med['lote_id']):
+                                    st.success("Lote eliminado correctamente")
+                                    st.rerun()
+                                else:
+                                    st.error("Error al eliminar el lote")
         else:
             st.info("No hay medicamentos en el inventario")
-    
+
+    # -------------------------------
+    # TAB 2: Agregar Medicamento con Lote
+    # -------------------------------
     with tab2:
         st.subheader("Agregar Nuevo Medicamento")
         with st.form("nuevo_medicamento"):
@@ -47,56 +51,37 @@ def gestion_inventario():
             descripcion = st.text_area("Descripción")
             principio_activo = st.text_input("Principio Activo")
             laboratorio = st.text_input("Laboratorio")
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                precio = st.number_input("Precio", min_value=0.0, format="%.2f")
-            with col2:
-                stock = st.number_input("Stock Inicial", min_value=0)
-            with col3:
-                stock_minimo = st.number_input("Stock Mínimo", min_value=0, value=10)
-            lote = st.text_input("Número de Lote")
+            precio = st.number_input("Precio", min_value=0.0, format="%.2f")
+            stock_minimo = st.number_input("Stock Mínimo", min_value=0, value=10)
+
+            st.write("### Información del Lote")
+            numero_lote = st.text_input("Número de Lote")
+            proveedor_id = st.number_input("ID Proveedor", min_value=1)
+            stock = st.number_input("Stock Inicial", min_value=0)
             fecha_vencimiento = st.date_input("Fecha de Vencimiento")
-            
-            submitted = st.form_submit_button("Guardar Medicamento")
+
+            submitted = st.form_submit_button("Guardar Medicamento con Lote")
             if submitted:
-                if db.insert_medicamento(nombre, descripcion, principio_activo, laboratorio, precio, stock, stock_minimo, lote, fecha_vencimiento):
-                    st.success("Medicamento agregado correctamente")
-                    # Registrar movimiento de entrada inicial
-                    db.sp_actualizar_stock(
-                        db.execute_query("SELECT LAST_INSERT_ID() as id")[0]['id'],
-                        stock, 
-                        'entrada', 
-                        'Stock inicial', 
-                        st.session_state['user']['id']
-                    )
+                if db.insert_medicamento_con_lote(
+                    nombre, descripcion, principio_activo, laboratorio, precio, stock_minimo,
+                    numero_lote, proveedor_id, stock, fecha_vencimiento
+                ):
+                    st.success("Medicamento y lote agregado correctamente")
                 else:
-                    st.error("Error al agregar el medicamento")
-    
+                    st.error("Error al agregar medicamento y lote")
+
+    # -------------------------------
+    # TAB 3: Actualizar Stock (Automático)
+    # -------------------------------
     with tab3:
-        st.subheader("Actualizar Stock")
-        medicamentos = db.get_medicamentos()
-        if medicamentos:
-            medicamento_options = {f"{m['nombre']} (Stock: {m['stock']})": m['id'] for m in medicamentos}
-            selected_med = st.selectbox("Seleccionar Medicamento", options=list(medicamento_options.keys()))
-            medicamento_id = medicamento_options[selected_med]
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                tipo_movimiento = st.radio("Tipo de Movimiento", ["Entrada", "Salida"])
-            with col2:
-                cantidad = st.number_input("Cantidad", min_value=1)
-            
-            motivo = st.text_input("Motivo del movimiento")
-            
-            if st.button("Registrar Movimiento"):
-                tipo = "entrada" if tipo_movimiento == "Entrada" else "salida"
-                if db.sp_actualizar_stock(medicamento_id, cantidad, tipo, motivo, st.session_state['user']['id']):
-                    st.success("Movimiento registrado correctamente")
-                else:
-                    st.error("Error al registrar el movimiento")
-        else:
-            st.info("No hay medicamentos en el inventario")
-    
+        st.subheader("Actualización Automática de Stock")
+        st.info(
+            "El stock se actualiza automáticamente:\n"
+            "- Cuando llega un nuevo lote, se incrementa el stock y se registra un movimiento de entrada.\n"
+            "- Cuando se realiza una venta, se descuenta el stock y se registra un movimiento de salida por cada medicamento vendido.\n"
+            "No es necesario actualizar el stock manualmente."
+        )
+
     with tab4:
         st.subheader("Historial de Movimientos")
         movimientos = db.get_movimientos_inventario()
@@ -127,16 +112,18 @@ def gestion_inventario():
         if alertas_vencimiento:
             for alerta in alertas_vencimiento:
                 dias_restantes = alerta.get("dias_restantes", None)
-        
+                nombre_med = alerta["medicamento"]
+                numero_lote = alerta["numero_lote"]
+
                 if dias_restantes is None:
-                    st.warning(f"{alerta['nombre']} - Lote {alerta['lote']} no tiene fecha de vencimiento registrada.")
+                    st.warning(f"{nombre_med} - Lote {numero_lote} no tiene fecha de vencimiento registrada.")
                 elif dias_restantes < 0:
-                    st.error(f"⚠️ {alerta['nombre']} - Lote {alerta['lote']} VENCIDO el {alerta['fecha_vencimiento']}")
+                    st.error(f"⚠️ {nombre_med} - Lote {numero_lote} VENCIDO el {alerta['fecha_vencimiento']}")
                 elif dias_restantes < 7:
-                    st.error(f"🚨 {alerta['nombre']} - Lote {alerta['lote']} vence en {dias_restantes} días")
+                    st.error(f"🚨 {nombre_med} - Lote {numero_lote} vence en {dias_restantes} días")
                 elif dias_restantes < 30:
-                    st.warning(f"{alerta['nombre']} - Lote {alerta['lote']} vence en {dias_restantes} días")
+                    st.warning(f"{nombre_med} - Lote {numero_lote} vence en {dias_restantes} días")
                 else:
-                    st.info(f"{alerta['nombre']} - Lote {alerta['lote']} vence en {dias_restantes} días")
+                    st.info(f"{nombre_med} - Lote {numero_lote} vence en {dias_restantes} días")
         else:
             st.success("No hay medicamentos próximos a vencer")

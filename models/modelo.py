@@ -10,7 +10,81 @@ class Database:
     def __init__(self):
         self.connection = None
         self.connect()
-    
+    def get_medicamentos_con_lotes(self):
+        query = """
+        SELECT 
+            m.id AS medicamento_id,
+            m.nombre,
+            m.descripcion,
+            m.principio_activo,
+            m.laboratorio,
+            m.precio,
+            m.stock,
+            m.stock_minimo,
+            l.id AS lote_id,
+            l.numero_lote,
+            l.fecha_vencimiento,
+            l.cantidad_inicial,
+            l.cantidad_actual,
+            p.nombre AS proveedor
+        FROM medicamentos m
+        LEFT JOIN lotes l ON m.id = l.medicamento_id
+        LEFT JOIN proveedores p ON l.proveedor_id = p.id
+        WHERE m.activo = TRUE
+        ORDER BY m.nombre, l.fecha_vencimiento
+        """
+        return self.execute_query(query)
+    def get_lotes_medicamentos(self):
+        query = """
+        SELECT 
+            l.id,
+            l.numero_lote AS numero_lote,
+            l.fecha_vencimiento,
+            l.cantidad_actual,
+            m.nombre
+        FROM lotes l
+        INNER JOIN medicamentos m ON l.medicamento_id = m.id
+        ORDER BY m.nombre, l.fecha_vencimiento
+        """
+        return self.execute_query(query)
+    def delete_lote_medicamento(self, lote_id):
+        """
+        Elimina un lote específico de la tabla lotes.
+        """
+        query = "DELETE FROM lotes WHERE id = %s"
+        return self.execute_update(query, (lote_id,))
+    def insert_medicamento_con_lote(self, nombre, descripcion, principio_activo, laboratorio, precio, stock_minimo,
+                                    numero_lote, proveedor_id, cantidad_inicial, fecha_vencimiento):
+        try:
+            cursor = self.connection.cursor()
+
+            # 1. Insertar medicamento
+            insert_med = """
+            INSERT INTO medicamentos (nombre, descripcion, principio_activo, laboratorio, precio, stock, stock_minimo)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """
+            cursor.execute(insert_med, (
+                nombre, descripcion, principio_activo, laboratorio, precio, cantidad_inicial, stock_minimo
+            ))
+            medicamento_id = cursor.lastrowid  # id generado
+
+            # 2. Insertar lote asociado
+            self.execute_update(
+            'sp_INGRESAR_LOTE',
+                (medicamento_id, proveedor_id, numero_lote, fecha_vencimiento, cantidad_inicial, cantidad_inicial),
+                True
+            )
+
+            self.connection.commit()
+            cursor.close()
+            return True
+
+        except Error as e:
+            print(f"❌ Error en insert_medicamento_con_lote: {e}")
+            self.connection.rollback()
+            return False
+
+
     def connect(self):
         try:
             self.connection = mysql.connector.connect(
@@ -159,21 +233,21 @@ class Database:
         result = self.execute_query(query, (medicamento_id,))
         return result[0] if result else None
     
-    def insert_medicamento(self, nombre, descripcion, principio_activo, laboratorio, precio, stock, stock_minimo, lote, fecha_vencimiento):
+    def insert_medicamento(self, nombre, descripcion, principio_activo, laboratorio, precio, stock, stock_minimo):
         query = """
-        INSERT INTO medicamentos (nombre, descripcion, principio_activo, laboratorio, precio, stock, stock_minimo, lote, fecha_vencimiento)
+        INSERT INTO medicamentos (nombre, descripcion, principio_activo, laboratorio, precio, stock, stock_minimo)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        return self.execute_update(query, (nombre, descripcion, principio_activo, laboratorio, precio, stock, stock_minimo, lote, fecha_vencimiento))
+        return self.execute_update(query, (nombre, descripcion, principio_activo, laboratorio, precio, stock, stock_minimo))
     
-    def update_medicamento(self, medicamento_id, nombre, descripcion, principio_activo, laboratorio, precio, stock_minimo, lote, fecha_vencimiento):
+    def update_medicamento(self, medicamento_id, nombre, descripcion, principio_activo, laboratorio, precio, stock_minimo):
         query = """
         UPDATE medicamentos 
         SET nombre = %s, descripcion = %s, principio_activo = %s, laboratorio = %s, precio = %s, 
-            stock_minimo = %s, lote = %s, fecha_vencimiento = %s
+            stock_minimo = %s
         WHERE id = %s
         """
-        return self.execute_update(query, (nombre, descripcion, principio_activo, laboratorio, precio, stock_minimo, lote, fecha_vencimiento, medicamento_id))
+        return self.execute_update(query, (nombre, descripcion, principio_activo, laboratorio, precio, stock_minimo, medicamento_id))
     
     def delete_medicamento(self, medicamento_id):
         query = "UPDATE medicamentos SET activo = FALSE WHERE id = %s"
