@@ -1,6 +1,6 @@
 import streamlit as st
-from controladores.database import Database
-import datetime
+from models.modelo import Database
+from datetime import datetime
 
 def dashboard():
     st.title("Dashboard - Sistema de Gestión de Farmacias")

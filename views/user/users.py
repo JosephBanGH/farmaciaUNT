@@ -1,6 +1,6 @@
 import streamlit as st
-from user.auth import logout
-from controladores.database import Database
+from .auth import logout
+from models.modelo import Database
 
 def perfil():
     st.header("Perfil de Usuario")
@@ -15,7 +15,7 @@ def perfil():
         username = st.text_input("Usuario", value=usuario['username'])
         email = st.text_input("Correo", value=usuario['email'])
         password = st.text_input("Contraseña", type="password")
-        perfil = st.selectbox("Perfil", ["Administrador", "Farmacéutico", "Cajero", "Cliente"], index=["Administrador", "Farmacéutico", "Cajero", "Cliente"].index(st.session_state['user']['perfil']))
+        perfil_selected = st.selectbox("Perfil", ["Administrador", "Farmacéutico", "Cajero", "Cliente"], index=["Administrador", "Farmacéutico", "Cajero", "Cliente"].index(st.session_state['user']['perfil']))
         submit = st.form_submit_button("Actualizar")
 
         if submit:
@@ -23,7 +23,7 @@ def perfil():
                 st.error("Todos los campos son obligatorios ⚠️")
                 return
 
-            if perfil is "Administrador" and st.session_state['user']['perfil'] != "Administrador":
+            if perfil_selected is "Administrador" and st.session_state['user']['perfil'] != "Administrador":
                 st.error("No puedes cambiar tu propio perfil a Administrador ❌")
                 return
 
