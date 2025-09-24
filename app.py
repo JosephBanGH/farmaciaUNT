@@ -3,10 +3,11 @@ from streamlit_option_menu import option_menu
 from views.user.auth import login, show_user_profile, logout
 from views.menu.inventory import gestion_inventario
 from views.menu.sales import punto_venta
-from controladores.database import Database
+from models.modelo import Database
 from views.user.registro import registro   # 👈 importar el registro
 from views.user.users import perfil,administracion
 from views.menu.reports import dashboard, reportes_ventas
+from controladores.controlador import verificar_base_datos
 
 def main():
     # Configuración de la página
@@ -33,19 +34,18 @@ def main():
     
     # Navegación principal
     # Determinar opciones de menú según el perfil
-    menu_options = ["Perfil","Dashboard", "Medicamentos", "Inventario", "Punto de Venta", "Pedidos", "Reportes"]
-    menu_icons = ["person-circle","house", "capsule", "box", "cash-coin", "send", "graph-up"]
+    menu_options = ["Perfil","Dashboard", "Medicamentos", "Inventario", "Punto de Venta", "Reportes"]
+    menu_icons = ["person-circle","house", "capsule", "box", "cash-coin", "graph-up"]
     #Administrador con todas las opciones
     if st.session_state['user']['perfil'] == 'Administrador':
         menu_options = ["Perfil","Dashboard", "Administración", "Medicamentos", "Inventario", "Punto de Venta", "Pedidos", "Pagos", "Reclamos y Devoluciones", "Cierre de caja", "Reportes"]
         menu_icons = ["person-circle","house", "person-circle","capsule", "box", "cash-coin", "send", "coin", "ban", "x-lg", "graph-up"]
-    elif st.session_state['user']['perfil'] == 'Farmacéutico':
-        menu_options.remove("Pedidos")
-        menu_icons.remove("send")
+    # elif st.session_state['user']['perfil'] == 'Farmacéutico':
+    #     menu_options.remove("Pedidos")
+    #     menu_icons.remove("send")
     elif st.session_state['user']['perfil'] == 'Cajero':
         menu_options = ["Perfil","Dashboard", "Pagos", "Reclamos y Devoluciones", "Cierre de caja", "Reportes"]
         menu_icons = ["person-circle","house", "coin", "ban", "x-lg", "graph-up"]
-    menu_icons.remove
     with st.sidebar:
         selected = option_menu(
             menu_title="Menú Principal",
