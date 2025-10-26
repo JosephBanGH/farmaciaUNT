@@ -8,7 +8,7 @@ from views.user.registro import registro   # 👈 importar el registro
 from views.user.users import perfil,administracion
 from views.menu.reports import dashboard, reportes_ventas
 from controladores.controlador import verificar_base_datos
-
+   
 def main():
     # Configuración de la página
     st.set_page_config(
