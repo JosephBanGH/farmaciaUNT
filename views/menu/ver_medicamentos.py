@@ -83,64 +83,64 @@ def ver_medicamentos():
     # Obtener lista de laboratorios únicos para el filtro
     laboratorios = sorted(list(set(m.get('laboratorio') for m in medicamentos if m.get('laboratorio'))))
     
-    # Barra lateral para filtros
-    with st.sidebar:
-        st.header("🔍 Filtros de Búsqueda")
-        
-        # Búsqueda principal
-        busqueda = st.text_input("Término de búsqueda")
-        criterio_busqueda = st.selectbox("Buscar por", 
-                                       ["nombre", "principio_activo", "laboratorio"],
-                                       format_func=lambda x: {"nombre": "Nombre", 
-                                                           "principio_activo": "Principio Activo", 
-                                                           "laboratorio": "Laboratorio"}[x])
-        
-        # Filtros avanzados
-        with st.expander("Filtros Avanzados"):
-            st.subheader("Filtros")
-            
-            # Filtro por laboratorio
-            filtro_lab = st.selectbox(
-                "Laboratorio",
-                ["Todos"] + laboratorios
-            )
-            
-            # Filtro por stock
-            st.write("**Stock Mínimo:**")
-            stock_min = st.number_input("Stock mínimo disponible", 
-                                      min_value=0, 
-                                      value=0,
-                                      step=1,
-                                      label_visibility="collapsed")
-            
-            # Filtro por rango de precios
-            st.write("**Rango de Precios:**")
-            col1, col2 = st.columns(2)
-            with col1:
-                precio_min = st.number_input("Mínimo", 
-                                           min_value=0.0, 
-                                           value=0.0,
-                                           step=0.5,
-                                           format="%.2f")
-            with col2:
-                precio_max = st.number_input("Máximo", 
-                                           min_value=0.0, 
-                                           value=1000.0,
-                                           step=0.5,
-                                           format="%.2f")
-            
-            # Ordenamiento
-            st.write("**Ordenar por:**")
-            orden = st.selectbox("Ordenar por",
-                               ["nombre_asc", "precio_asc", "precio_desc", "stock_asc", "stock_desc"],
-                               format_func={
-                                   "nombre_asc": "Nombre (A-Z)",
-                                   "precio_asc": "Precio (menor a mayor)",
-                                   "precio_desc": "Precio (mayor a menor)",
-                                   "stock_asc": "Stock (menor a mayor)",
-                                   "stock_desc": "Stock (mayor a menor)"
-                               }.get)
+# Barra lateral para filtros
+
+    st.header("🔍 Filtros de Búsqueda")
     
+    # Búsqueda principal
+    busqueda = st.text_input("Término de búsqueda")
+    criterio_busqueda = st.selectbox("Buscar por", 
+                                    ["nombre", "principio_activo", "laboratorio"],
+                                    format_func=lambda x: {"nombre": "Nombre", 
+                                                        "principio_activo": "Principio Activo", 
+                                                        "laboratorio": "Laboratorio"}[x])
+    
+    # Filtros avanzados
+    with st.expander("Filtros Avanzados"):
+        st.subheader("Filtros")
+        
+        # Filtro por laboratorio
+        filtro_lab = st.selectbox(
+            "Laboratorio",
+            ["Todos"] + laboratorios
+        )
+        
+        # Filtro por stock
+        st.write("**Stock Mínimo:**")
+        stock_min = st.number_input("Stock mínimo disponible", 
+                                    min_value=0, 
+                                    value=0,
+                                    step=1,
+                                    label_visibility="collapsed")
+        
+        # Filtro por rango de precios
+        st.write("**Rango de Precios:**")
+        col1, col2 = st.columns(2)
+        with col1:
+            precio_min = st.number_input("Mínimo", 
+                                        min_value=0.0, 
+                                        value=0.0,
+                                        step=0.5,
+                                        format="%.2f")
+        with col2:
+            precio_max = st.number_input("Máximo", 
+                                        min_value=0.0, 
+                                        value=1000.0,
+                                        step=0.5,
+                                        format="%.2f")
+        
+        # Ordenamiento
+        st.write("**Ordenar por:**")
+        orden = st.selectbox("Ordenar por",
+                            ["nombre_asc", "precio_asc", "precio_desc", "stock_asc", "stock_desc"],
+                            format_func={
+                                "nombre_asc": "Nombre (A-Z)",
+                                "precio_asc": "Precio (menor a mayor)",
+                                "precio_desc": "Precio (mayor a menor)",
+                                "stock_asc": "Stock (menor a mayor)",
+                                "stock_desc": "Stock (mayor a menor)"
+                            }.get)
+
     # Aplicar filtros
     filtros = {
         'laboratorio': filtro_lab if filtro_lab != "Todos" else None,
