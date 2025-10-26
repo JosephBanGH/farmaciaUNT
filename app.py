@@ -62,7 +62,9 @@ def main():
         perfil()
     elif selected == "Dashboard":
         dashboard();
-    
+    elif selected == "Medicamentos":
+        from views.menu.ver_medicamentos import ver_medicamentos
+        ver_medicamentos()
     elif selected == "Inventario":
         gestion_inventario()
     
