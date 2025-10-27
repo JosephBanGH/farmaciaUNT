@@ -44,8 +44,8 @@ def main():
         menu_options.remove("Pedidos")
         menu_icons.remove("send")
     elif st.session_state['user']['perfil'] == 'Cajero':
-        menu_options = ["Perfil","Dashboard", "Punto de Venta", "Comprobantes", "Pagos", "Reclamos y Devoluciones", "Cierre de caja", "Reportes"]
-        menu_icons = ["person-circle","house", "cash-coin", "file-earmark-text", "coin", "ban", "x-lg", "graph-up"]
+        menu_options = ["Perfil","Dashboard", "Pagos", "Comprobantes", "Reclamos y Devoluciones", "Cierre de caja", "Reportes"]
+        menu_icons = ["person-circle","house", "coin", "file-earmark-text", "ban", "x-lg", "graph-up"]
     elif st.session_state['user']['perfil']== 'Cliente':
         menu_options = ["Perfil","Dashboard", "Pedidos", "Pagos", "Reclamos y Devoluciones", "Reportes"]
         menu_icons = ["person-circle","house", "send", "coin", "ban", "x-lg", "graph-up"]

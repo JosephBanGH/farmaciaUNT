@@ -61,6 +61,7 @@ def punto_venta():
             
             st.write(f"**Total: ${total:.2f}**")
             
+            #----------------------------------------
             # Información del cliente
             st.subheader("Datos del Cliente")
             cliente_id = st.number_input("ID Cliente (opcional)", min_value=0, value=0)
@@ -193,5 +194,6 @@ def punto_venta():
             if st.button("Vaciar Carrito"):
                 st.session_state['carrito'] = []
                 st.rerun()
+                #------------------------------------
         else:
             st.info("El carrito está vacío")

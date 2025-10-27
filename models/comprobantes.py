@@ -144,7 +144,7 @@ class GeneradorComprobantes:
         
         # Pie de página
         elementos.append(Paragraph("Gracias por su compra", styles['Normal']))
-        elementos.append(Paragraph("Este documento es una representación impresa de la Boleta Electrónica", 
+        elementos.append(Paragraph("*Este documento es un trabajo académico*\n\nEste documento es una representación impresa de la Boleta Electrónica", 
                                   styles['Italic']))
         
         # Construir PDF
@@ -275,9 +275,9 @@ class GeneradorComprobantes:
         
         # Pie de página
         elementos.append(Paragraph("Gracias por su compra", styles['Normal']))
-        elementos.append(Paragraph("Este documento es una representación impresa de la Factura Electrónica", 
+        elementos.append(Paragraph("Representación impresa de la Factura Electrónica", 
                                   styles['Italic']))
-        elementos.append(Paragraph("Autorizado mediante Resolución de Superintendencia N° 123-2024/SUNAT", 
+        elementos.append(Paragraph("Autorizado mediante Resolución de Superintendencia N° 123-2024/SUNAT. *En realidad este documento es un trabajo académico*\n\n", 
                                   styles['Italic']))
         
         # Construir PDF
