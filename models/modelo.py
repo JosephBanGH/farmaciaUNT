@@ -279,6 +279,74 @@ class Database:
         """
         return self.execute_query(query, (limit,))
     
+    def get_venta_por_id(self, venta_id):
+        """Obtiene los detalles de una venta específica"""
+        query = """
+        SELECT v.*, u.username as vendedor, c.username as cliente
+        FROM ventas v
+        INNER JOIN usuarios u ON v.usuario_id = u.id
+        LEFT JOIN usuarios c ON v.cliente_id = c.id
+        WHERE v.id = %s
+        """
+        result = self.execute_query(query, (venta_id,))
+        return result[0] if result else None
+    
+    def get_detalle_venta(self, venta_id):
+        """Obtiene los detalles de productos de una venta"""
+        query = """
+        SELECT dv.*, m.nombre as medicamento_nombre
+        FROM detalles_venta dv
+        INNER JOIN medicamentos m ON dv.medicamento_id = m.id
+        WHERE dv.venta_id = %s
+        """
+        return self.execute_query(query, (venta_id,))
+    
+    def registrar_comprobante(self, venta_id, tipo_comprobante, numero_comprobante, ruta_archivo):
+        """
+        Registra un comprobante emitido en la base de datos
+        tipo_comprobante: 'boleta' o 'factura'
+        """
+        query = """
+        INSERT INTO comprobantes (venta_id, tipo_comprobante, numero_comprobante, ruta_archivo, fecha_emision)
+        VALUES (%s, %s, %s, %s, NOW())
+        """
+        return self.execute_update(query, (venta_id, tipo_comprobante, numero_comprobante, ruta_archivo))
+    
+    def get_ultimo_numero_comprobante(self, tipo):
+        """
+        Obtiene el último número de comprobante emitido
+        tipo: 'boleta' o 'factura'
+        """
+        query = """
+        SELECT MAX(CAST(SUBSTRING_INDEX(numero_comprobante, '-', -1) AS UNSIGNED)) as ultimo_numero
+        FROM comprobantes
+        WHERE tipo_comprobante = %s
+        """
+        result = self.execute_query(query, (tipo,))
+        if result and result[0]['ultimo_numero']:
+            return result[0]['ultimo_numero']
+        return 0
+    
+    def get_comprobantes(self, limit=50):
+        """Obtiene la lista de comprobantes emitidos"""
+        query = """
+        SELECT c.*, v.total, u.username as vendedor
+        FROM comprobantes c
+        INNER JOIN ventas v ON c.venta_id = v.id
+        INNER JOIN usuarios u ON v.usuario_id = u.id
+        ORDER BY c.fecha_emision DESC
+        LIMIT %s
+        """
+        return self.execute_query(query, (limit,))
+    
+    def get_comprobante_por_venta(self, venta_id):
+        """Obtiene el comprobante asociado a una venta"""
+        query = """
+        SELECT * FROM comprobantes WHERE venta_id = %s
+        """
+        result = self.execute_query(query, (venta_id,))
+        return result[0] if result else None
+    
     def close(self):
         if self.connection and self.connection.is_connected():
             self.connection.close()
