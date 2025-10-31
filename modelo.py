@@ -88,16 +88,17 @@ class Database:
     def connect(self):
         try:
             self.connection = mysql.connector.connect(
-                host=os.getenv("MYSQLHOST", "localhost"),
-                database=os.getenv("MYSQLDATABASE", "farmacia_db"),
-                user=os.getenv("MYSQLUSER", "root"),
-                password=os.getenv("MYSQLPASSWORD", ""),
-                port=int(os.getenv("MYSQLPORT", 3306))
+                host=os.getenv("MYSQLHOST", "xxx"),
+                database=os.environ.get("xxx"),
+                user=os.getenv("MYSQLUSER", "x"),
+                password=os.getenv("MYSQLPASSWORD"),
+                port=int(os.getenv("MYSQLPORT", x))
             )
             if self.connection.is_connected():
                 db_info = self.connection.get_server_info()
                 print(f"✅ Conectado a MySQL Server versión {db_info}")
         except Error as e:
+            print(os.getenv("MYSQLPASSWORD"),'rxctvybyunimo--------------------------------------------------')
             print(f"❌ Error al conectar a MySQL: {e}")
             st.error(f"Error de conexión a la base de datos: {e}")
 
