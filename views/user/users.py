@@ -58,13 +58,15 @@ def administracion():
             col1, col2 = st.columns(2)
             with col1:
                 nuevo_usuario = st.text_input("Nombre de usuario")
-                email = st.text_input("Email")
+                nombres = st.text_input("Nombres")
+                apellidos = st.text_input("Apellidos")
             with col2:
+                email = st.text_input("Email")
                 nueva_contrasena = st.text_input("Contraseña", type="password")
                 perfil = st.selectbox("Perfil", ["Administrador", "Farmacéutico", "Cajero", "Cliente"])
             
             if st.form_submit_button("Crear Usuario"):
-                if db.sp_crear_usuario(nuevo_usuario, nueva_contrasena, email, perfil):
+                if db.sp_crear_usuario(nuevo_usuario, nombres, apellidos, nueva_contrasena, email, perfil):
                     st.success("Usuario creado correctamente")
                 else:
                     st.error("Error al crear el usuario")

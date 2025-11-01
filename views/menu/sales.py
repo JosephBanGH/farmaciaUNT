@@ -23,7 +23,7 @@ def punto_venta():
         if medicamentos:
             for med in medicamentos:
                 if med['stock'] > 0:  # Solo mostrar productos con stock disponible
-                    with st.expander(f"{med['nombre']} - ${med['precio']:.2f} (Stock: {med['stock']})"):
+                    with st.expander(f"{med['nombre']} - ${med['precio_venta']:.2f} (Stock: {med['stock']})"):
                         st.write(f"**Principio Activo:** {med['principio_activo']}")
                         cantidad = st.number_input("Cantidad", min_value=1, max_value=med['stock'], key=f"cant_{med['id']}")
                         if st.button("Agregar al Carrito", key=f"add_{med['id']}"):
@@ -39,7 +39,7 @@ def punto_venta():
                                 st.session_state['carrito'].append({
                                     'medicamento_id': med['id'],
                                     'nombre': med['nombre'],
-                                    'precio': float(med['precio']),
+                                    'precio': float(med['precio_venta']),
                                     'cantidad': cantidad
                                 })
                             st.success("Producto agregado al carrito")
@@ -100,7 +100,7 @@ def punto_venta():
                         })
                     
                     # Procesar venta
-                    if db.sp_generar_venta(cliente_id if cliente_id > 0 else None, st.session_state['user']['id'], detalles):
+                    if db.sp_generar_venta(cliente_id, st.session_state['user']['id'], detalles):
                         # Obtener el ID de la última venta
                         ventas_recientes = db.get_ventas_recientes(1)
                         if ventas_recientes:

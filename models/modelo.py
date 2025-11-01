@@ -88,11 +88,11 @@ class Database:
     def connect(self):
         try:
             self.connection = mysql.connector.connect(
-                host=os.getenv("MYSQLHOST", ""),
-                database=os.getenv("MYSQLDATABASE", ""),
-                user=os.getenv("MYSQLUSER", ""),
-                password=os.getenv("MYSQLPASSWORD", ""),
-                port=int(os.getenv("MYSQLPORT",))
+                host=os.getenv("MYSQLHOST","x"),
+                database=os.getenv("MYSQLDATABASE","x"),
+                user=os.getenv("MYSQLUSER", "x"),
+                password=os.getenv("MYSQLPASSWORD", "x"),
+                port=int(os.getenv("MYSQLPORT",x))
             )
             if self.connection.is_connected():
                 db_info = self.connection.get_server_info()
