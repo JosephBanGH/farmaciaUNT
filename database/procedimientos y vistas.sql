@@ -1,105 +1,93 @@
--- Crear base de datos
-CREATE DATABASE IF NOT EXISTS farmacia_db;
-USE farmacia_db;
+use soft_farmacian
 
--- Tabla de usuarios
-CREATE TABLE IF NOT EXISTS usuarios (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    perfil ENUM('Administrador', 'Farmacéutico', 'Cajero', 'Cliente') NOT NULL,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    activo BOOLEAN DEFAULT TRUE
-);
+-- Procedimiento almacenado para crear un nuevo cliente
+DELIMITER $$
+CREATE PROCEDURE sp_crear_cliente(
+    IN p_username VARCHAR(50),
+    IN p_password_hash VARCHAR(255),
+    IN p_email VARCHAR(100),
+    IN p_nombres VARCHAR(100),
+    IN p_apellidos VARCHAR(100),
+    IN p_tipo_documento ENUM('DNI', 'RUC', 'CE', 'PASAPORTE'),
+    IN p_numero_documento VARCHAR(20),
+    IN p_direccion TEXT,
+    IN p_telefono VARCHAR(20),
+    IN p_fecha_nacimiento DATE,
+    IN p_genero ENUM('Masculino', 'Femenino', 'Otro')
+)
+BEGIN
+    DECLARE v_usuario_id INT;
+    
+    START TRANSACTION;
+    
+    -- Insertar en la tabla usuarios
+    INSERT INTO usuarios(usuario, nombres, apellidos, contrasena_hash, email, perfil, activo)
+    VALUES (p_username, p_nombres, p_apellidos, p_password_hash, p_email, 'Cliente', TRUE);
+    
+    SET v_usuario_id = LAST_INSERT_ID();
+    
+    -- Insertar en la tabla clientes
+    INSERT INTO clientes (
+        id, tipo_documento, numero_documento,
+        direccion, telefono, fecha_nacimiento, genero
+    ) VALUES (
+        v_usuario_id, p_tipo_documento, p_numero_documento,
+        p_direccion, p_telefono, p_fecha_nacimiento, p_genero
+    );
+    COMMIT;
+END$$
+DELIMITER ;
 
+DELIMITER $$
+CREATE PROCEDURE sp_actualizar_cliente(
+    IN p_id INT,
+    IN p_email VARCHAR(100),
+    IN p_nombres VARCHAR(100),
+    IN p_apellidos VARCHAR(100),
+    IN p_direccion TEXT,
+    IN p_telefono VARCHAR(20),
+    IN p_fecha_nacimiento DATE,
+    IN p_genero ENUM('Masculino', 'Femenino', 'Otro'),
+    IN p_activo BOOLEAN
+)
+BEGIN
+    START TRANSACTION;
+    
+    -- Actualizar datos en usuarios
+    UPDATE usuarios 
+    SET email = p_email,
+        activo = p_activo,
+        nombres = p_nombres,
+        apellidos = p_apellidos
+    WHERE id = p_id;
+    
+    -- Actualizar datos en clientes
+    UPDATE clientes
+    SET 
+        direccion = p_direccion,
+        telefono = p_telefono,
+        fecha_nacimiento = p_fecha_nacimiento,
+        genero = p_genero
+    WHERE id = p_id;
+    
+    COMMIT;
+END$$
+DELIMITER ;
 
--- Tabla de medicamentos
-CREATE TABLE medicamentos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL,
-    descripcion TEXT,
-    principio_activo VARCHAR(100),
-    laboratorio VARCHAR(100),
-    precio DECIMAL(10, 2) NOT NULL,
-    stock INT NOT NULL DEFAULT 0,
-    stock_minimo INT NOT NULL DEFAULT 10,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    activo BOOLEAN DEFAULT TRUE
-);
-
--- Tabla de movimientos de inventario
-CREATE TABLE movimientos_inventario (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    medicamento_id INT NOT NULL,
-    tipo ENUM('entrada', 'salida') NOT NULL,
-    cantidad INT NOT NULL,
-    motivo VARCHAR(200),
-    usuario_id INT NOT NULL,
-    fecha_movimiento TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (medicamento_id) REFERENCES medicamentos(id),
-    FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
-);
-
--- Tabla de ventas
-CREATE TABLE ventas (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    cliente_id INT,
-    total DECIMAL(10, 2) NOT NULL,
-    impuesto DECIMAL(10, 2) NOT NULL,
-    usuario_id INT NOT NULL,
-    fecha_venta TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
-    FOREIGN KEY (cliente_id) REFERENCES usuarios(id)
-);
-
--- Tabla de detalles de venta
-CREATE TABLE detalles_venta (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    venta_id INT NOT NULL,
-    medicamento_id INT NOT NULL,
-    cantidad INT NOT NULL,
-    precio_unitario DECIMAL(10, 2) NOT NULL,
-    subtotal DECIMAL(10, 2) NOT NULL,
-    FOREIGN KEY (venta_id) REFERENCES ventas(id),
-    FOREIGN KEY (medicamento_id) REFERENCES medicamentos(id)
-);
-
--- Tabla de proveedores
-CREATE TABLE proveedores (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL,
-    contacto VARCHAR(100),
-    telefono VARCHAR(20),
-    email VARCHAR(100),
-    direccion TEXT,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-CREATE TABLE lotes (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    medicamento_id INT NOT NULL,
-    proveedor_id INT NOT NULL,
-    numero_lote VARCHAR(50) NOT NULL,
-    fecha_vencimiento DATE NOT NULL,
-    cantidad_inicial INT NOT NULL,
-    cantidad_actual INT NOT NULL,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (medicamento_id) REFERENCES medicamentos(id),
-    FOREIGN KEY (proveedor_id) REFERENCES proveedores(id)
-);
--- Procedimientos almacenados
 
 -- SP para crear usuario
 DELIMITER $$
 CREATE PROCEDURE sp_crear_usuario(
     IN p_username VARCHAR(50),
+    IN p_nombres VARCHAR(50),
+    IN p_apellidos VARCHAR(50),
     IN p_password_hash VARCHAR(255),
     IN p_email VARCHAR(100),
     IN p_perfil ENUM('Administrador', 'Farmacéutico', 'Cajero', 'Cliente')
 )
 BEGIN
-    INSERT INTO usuarios (username, password_hash, email, perfil)
-    VALUES (p_username, p_password_hash, p_email, p_perfil);
+    INSERT INTO usuarios (usuario, nombres, apellidos, contrasena_hash, email, perfil)
+    VALUES (p_username, p_nombres, p_apellidos, p_password_hash, p_email, p_perfil);
 END$$
 DELIMITER ;
 
@@ -113,7 +101,7 @@ CREATE PROCEDURE sp_actualizar_usuario(
 BEGIN
     UPDATE usuarios
     SET email=p_email, perfil=p_perfil
-    where username=p_username;
+    where usuario=p_username;
 END$$
 DELIMITER ;
 
@@ -153,6 +141,7 @@ BEGIN
 END$$
 DELIMITER ;
 
+
 -- SP para ingresar lote y registrar movimiento
 DELIMITER $$
 CREATE PROCEDURE sp_ingresar_lote(
@@ -160,6 +149,7 @@ CREATE PROCEDURE sp_ingresar_lote(
     IN p_proveedor_id INT,
     IN p_numero_lote VARCHAR(50),
     IN p_fecha_vencimiento DATE,
+    IN p_precio_c DOUBLE,
     IN p_cantidad_inicial INT,
     IN p_usuario_id INT
 )
@@ -169,13 +159,13 @@ BEGIN
     START TRANSACTION;
 
     -- Insertar lote
-    INSERT INTO lotes (medicamento_id, proveedor_id, numero_lote, fecha_vencimiento, cantidad_inicial, cantidad_actual)
-    VALUES (p_medicamento_id, p_proveedor_id, p_numero_lote, p_fecha_vencimiento, p_cantidad_inicial, p_cantidad_inicial);
+    INSERT INTO lotes (medicamento_id, proveedor_id, numero_lote, fecha_vencimiento, precio_compra, cantidad_inicial, cantidad_actual)
+    VALUES (p_medicamento_id, p_proveedor_id, p_numero_lote, p_fecha_vencimiento, p_precio_c, p_cantidad_inicial, p_cantidad_inicial);
 
     SET lote_id = LAST_INSERT_ID();
 
     -- Actualizar stock del medicamento
-    UPDATE medicamentos SET stock = stock + p_cantidad_inicial WHERE id = p_medicamento_id;
+    -- UPDATE medicamentos SET stock = stock + p_cantidad_inicial WHERE id = p_medicamento_id;
 
     -- Registrar movimiento de inventario
     INSERT INTO movimientos_inventario (medicamento_id, tipo, cantidad, motivo, usuario_id)
@@ -184,7 +174,7 @@ BEGIN
     COMMIT;
 END$$
 DELIMITER ;
-
+  
 -- SP para generar venta
 DELIMITER $$
 CREATE PROCEDURE sp_generar_venta(
@@ -235,9 +225,6 @@ BEGIN
         INSERT INTO detalles_venta (venta_id, medicamento_id, cantidad, precio_unitario, subtotal)
         VALUES (v_venta_id, medicamento_id, cantidad, precio, cantidad * precio);
         
-        -- Actualizar stock y registrar movimiento
-        CALL sp_actualizar_stock(medicamento_id, cantidad, 'salida', 'Venta', p_usuario_id);
-        
         SET i = i + 1;
     END WHILE;
     
@@ -257,8 +244,8 @@ BEGIN
         v.fecha_venta,
         v.total,
         v.impuesto,
-        u.username as vendedor,
-        c.username as cliente
+        u.usuario as vendedor,
+        c.nombres as cliente
     FROM ventas v
     INNER JOIN usuarios u ON v.usuario_id = u.id
     LEFT JOIN usuarios c ON v.cliente_id = c.id
@@ -266,6 +253,7 @@ BEGIN
     ORDER BY v.fecha_venta DESC;
 END$$
 DELIMITER ;
+
 
 -- SP para alertas de vencimiento
 DELIMITER $$
@@ -285,20 +273,32 @@ BEGIN
 END$$
 DELIMITER ;
 
--- Insertar datos de ejemplo
+-- Vista para obtener información completa de clientes
+CREATE OR REPLACE VIEW vista_clientes AS
+SELECT 
+    u.id,
+    u.usuario,
+    u.email,
+    u.fecha_creacion,
+    u.activo,
+    u.nombres,
+    u.apellidos,
+    CONCAT(u.nombres, ' ', u.apellidos) as nombre_completo,
+    c.tipo_documento,
+    c.numero_documento,
+    c.direccion,
+    c.telefono,
+    c.fecha_nacimiento,
+    c.genero,
+    c.puntos_acumulados
+FROM usuarios u
+JOIN clientes c ON u.id = c.id
+WHERE u.perfil = 'Cliente';
 
-INSERT INTO medicamentos (nombre, descripcion, principio_activo, laboratorio, precio, stock, stock_minimo) VALUES
-('Paracetamol 500mg', 'Analgésico y antipirético', 'Paracetamol', 'Genfar', 5.50, 100, 20),
-('Ibuprofeno 400mg', 'Antiinflamatorio no esteroideo', 'Ibuprofeno', 'Bayer', 7.80, 50, 15),
-('Amoxicilina 500mg', 'Antibiótico de amplio espectro', 'Amoxicilina', 'Pfizer', 12.90, 30, 10),
-('Loratadina 10mg', 'Antihistamínico', 'Loratadina', 'Sanofi', 8.25, 80, 25);
+-- Insertar proveedores
+INSERT INTO `proveedores` (`nombre`, `contacto`, `telefono`, `email`, `direccion`, `ruc`, `activo`) VALUES
+('Farmacéutica Nacional S.A.', 'Juan Pérez', '987654321', 'jperez@farmaceutica.com', 'Av. Principal 123, Lima', '20123456789', 1),
+('Laboratorios Salud S.A.C.', 'María Gómez', '987654322', 'mgomez@salud.com', 'Calle Los Pinos 456, Lima', '20123456780', 1),
+('Distribuidora Médica E.I.R.L.', 'Carlos López', '987654323', 'clopez@dime.com.pe', 'Jr. San Martín 789, Lima', '20123456781', 1);
 
-INSERT INTO proveedores (nombre, contacto, telefono, email, direccion) VALUES
-('Distribuidora Médica S.A.', 'Juan Pérez', '1234-5678', 'ventas@dmedical.com', 'Av. Principal 123, Ciudad'),
-('Farmacéutica Nacional', 'María González', '8765-4321', 'contacto@farmanacional.com', 'Calle Secundaria 456, Ciudad');
 
-INSERT INTO lotes(medicamento_id, proveedor_id, numero_lote, fecha_vencimiento, cantidad_inicial, cantidad_actual) VALUES
-(1, 1, 'L001', '2024-12-31', 100, 100),
-(2, 2, 'L002', '2025-06-30', 50, 50),
-(3, 1, 'L003', '2024-11-30', 30, 30),
-(4, 2, 'L004', '2025-01-15', 80, 80);
