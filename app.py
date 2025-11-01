@@ -4,11 +4,12 @@ from views.user.auth import login, show_user_profile, logout
 from views.menu.inventory import gestion_inventario
 from views.menu.sales import punto_venta
 from models.modelo import Database
-from views.user.registro import registro   # 👈 importar el registro
+from views.user.registro import registro   # importar el registro
 from views.user.users import perfil,administracion
 from views.menu.reports import dashboard, reportes_ventas
 from controladores.controlador import verificar_base_datos
-   
+from views.menu.pagos import mostrar_historial_pagos
+
 def main():
     # Configuración de la página
     st.set_page_config(
@@ -34,8 +35,8 @@ def main():
     
     # Navegación principal
     # Determinar opciones de menú según el perfil
-    menu_options = ["Perfil","Dashboard", "Medicamentos", "Inventario", "Punto de Venta", "Comprobantes", "Reportes"]
-    menu_icons = ["person-circle","house", "capsule", "box", "cash-coin", "file-earmark-text", "graph-up"]
+    menu_options = ["Perfil","Dashboard", "Medicamentos", "Inventario", "Punto de Venta", "Comprobantes", "Reportes", "Pagos"]
+    menu_icons = ["person-circle","house", "capsule", "box", "cash-coin", "file-earmark-text", "graph-up", "coin"]
     #Administrador con todas las opciones
     if st.session_state['user']['perfil'] == 'Administrador':
         menu_options = ["Perfil","Dashboard", "Administración", "Medicamentos", "Inventario", "Punto de Venta", "Comprobantes", "Pedidos", "Pagos", "Reclamos y Devoluciones", "Cierre de caja", "Reportes"]
@@ -66,7 +67,7 @@ def main():
         from views.menu.ver_medicamentos import ver_medicamentos
         ver_medicamentos()
     elif selected == "Inventario":
-        gestion_inventario()
+        gestion_inventario(st.session_state['user']['id'])
     
     elif selected == "Punto de Venta":
         punto_venta()
@@ -80,6 +81,9 @@ def main():
     
     elif selected == "Administración":
         administracion()
+        
+    elif selected == "Pagos":
+        mostrar_historial_pagos()
 
 if __name__ == "__main__":
     main()

@@ -1,0 +1,174 @@
+{
+  "name": "Alertas de inventario",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 17,
+              "triggerAtMinute": 30
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -176,
+        -32
+      ],
+      "id": "6cdb6f3f-698f-430c-912d-9b1373264eb2",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "24ad927e-75d6-46f0-ba57-8979ed343d60",
+              "leftValue": "={{ $items(\"MySQL\").length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        192,
+        -48
+      ],
+      "id": "bef2ddd5-77b0-48f1-b98b-13dcd04bbb35",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtiene todos los resultados del nodo MySQL\nconst items = $items(\"MySQL\");\n\n// Prepara el mensaje con un título\nlet mensaje = \"<b>🚨 Alerta: Medicamentos Próximos a Vencer 🚨</b>\\n\\n\";\nmensaje += \"Se encontraron los siguientes lotes que vencerán en los próximos 60 días:\\n\\n\";\n\n// Recorre cada medicamento encontrado\nfor (const item of items) {\n  const data = item.json;\n\n  // Formatea la fecha\n  const fecha = new Date(data.fecha_vencimiento);\n  const fechaFormateada = fecha.toLocaleDateString('es-ES', {\n    day: '2-digit',\n    month: '2-digit',\n    year: 'numeric',\n    timeZone: 'UTC' // Importante si la BBDD no guarda zona horaria\n  });\n\n  // --- ¡CAMPOS AJUSTADOS A TU SCHEMA! ---\n  mensaje += `💊 <b>${data.nombre}</b>\\n`;\n  mensaje += `  •  Lote: ${data.numero_lote}\\n`;\n  mensaje += `  •  Stock: ${data.cantidad_actual}\\n`; // Añadimos el stock actual\n  mensaje += `  •  Vence: ${fechaFormateada}\\n\\n`;\n}\n\n// Devuelve el mensaje completo en un nuevo objeto\nreturn {\n  telegramMessage: mensaje\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        -144
+      ],
+      "id": "69af5208-b423-41c5-a821-c3a1339db98b",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "chatId": "7651421707",
+        "text": "={{ $json[\"telegramMessage\"] }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        608,
+        -144
+      ],
+      "id": "1faa2ac5-9aa8-47c6-8ec7-fecd288f56d8",
+      "name": "Send a text message",
+      "webhookId": "c87dfc80-b86a-47f3-aadb-0c03bcaa33ce",
+      "credentials": {
+        "telegramApi": {
+          "id": "IikJssx3geCOLx2h",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n    m.nombre,\n    l.numero_lote,\n    l.fecha_vencimiento,\n    l.cantidad_actual\nFROM\n    lotes AS l\nJOIN\n    medicamentos AS m ON l.medicamento_id = m.id\nWHERE\n    l.fecha_vencimiento BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 60 DAY)\n    AND l.cantidad_actual > 0\nORDER BY\n    l.fecha_vencimiento ASC;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        32,
+        -32
+      ],
+      "id": "8e5763e0-df08-4687-9c95-46301f0769ca",
+      "name": "MySQL",
+      "credentials": {
+        "mySql": {
+          "id": "PeSkXvI7kncrLrXJ",
+          "name": "MySQL account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "MySQL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MySQL": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "882e7a21-81bc-4f41-9781-d62acd801942",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "380ac9a42d28f0586dac90917782cb9c2793b17b6c74be3f7c70d57914cc88ac"
+  },
+  "id": "MkshSmouDGOlLxmr",
+  "tags": []
+}

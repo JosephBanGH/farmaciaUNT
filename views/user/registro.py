@@ -6,6 +6,8 @@ def registro():
 
     with st.form("registro_form"):
         username = st.text_input("Usuario")
+        nombres = st.text_input("Nombres")
+        apellidos = st.text_input("Apellidos")
         email = st.text_input("Correo")
         password = st.text_input("Contraseña", type="password")
         confirm_password = st.text_input("Confirmar Contraseña", type="password")
@@ -30,7 +32,7 @@ def registro():
                 return
 
             try:
-                success = db.sp_crear_usuario(username, password, email, perfil)
+                success = db.sp_crear_usuario(username, nombres, apellidos, password, email, perfil)
                 if success:
                     st.success(f"Usuario {username} creado con éxito ✅")
                 else:

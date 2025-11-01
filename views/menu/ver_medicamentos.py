@@ -32,18 +32,20 @@ def buscar_medicamentos_avanzado(medicamentos, busqueda, criterio_busqueda, filt
         resultados = [m for m in resultados if m.get('stock', 0) >= filtros['stock_min']]
     
     if filtros['precio_min'] is not None:
-        resultados = [m for m in resultados if m.get('precio', 0) >= filtros['precio_min']]
+        resultados = [m for m in resultados if m.get('precio_venta', 0) >= filtros['precio_min']]
     
     if filtros['precio_max'] is not None:
-        resultados = [m for m in resultados if m.get('precio', float('inf')) <= filtros['precio_max']]
-    
+        resultados = [m for m in resultados if m.get('precio_venta', float('inf')) <= filtros['precio_max']]
+    print('resultados pre:',resultados)
+    print('filtros',filtros)
+
     # Ordenar resultados
     if filtros['orden'] == 'nombre_asc':
         resultados.sort(key=lambda x: x.get('nombre', '').lower())
     elif filtros['orden'] == 'precio_asc':
-        resultados.sort(key=lambda x: x.get('precio', 0))
+        resultados.sort(key=lambda x: x.get('precio_venta', 0))
     elif filtros['orden'] == 'precio_desc':
-        resultados.sort(key=lambda x: x.get('precio', 0), reverse=True)
+        resultados.sort(key=lambda x: x.get('precio_venta', 0), reverse=True)
     elif filtros['orden'] == 'stock_asc':
         resultados.sort(key=lambda x: x.get('stock', 0))
     elif filtros['orden'] == 'stock_desc':
@@ -67,7 +69,7 @@ def mostrar_medicamento(med):
             stock_color = "red" if stock <= stock_min else "green"
             st.metric("Stock Disponible", f"{stock} unidades", 
                      delta=f"Mínimo: {stock_min}", delta_color="off")
-            st.metric("Precio", f"${med.get('precio', 0):.2f}")
+            st.metric("Precio", f"${med.get('precio_venta', 0):.2f}")
             
             # Mostrar alerta si el stock está por debajo del mínimo
             if stock <= stock_min:
@@ -88,7 +90,7 @@ def ver_medicamentos():
     st.header("🔍 Filtros de Búsqueda")
     
     # Búsqueda principal
-    busqueda = st.text_input("Término de búsqueda")
+    busqueda = st.text_input("Término de búsqueda","")
     criterio_busqueda = st.selectbox("Buscar por", 
                                     ["nombre", "principio_activo", "laboratorio"],
                                     format_func=lambda x: {"nombre": "Nombre", 
@@ -150,8 +152,9 @@ def ver_medicamentos():
         'orden': orden
     }
     
+    print(criterio_busqueda)
     resultados = buscar_medicamentos_avanzado(medicamentos, busqueda, criterio_busqueda, filtros)
-    
+    print("resultados_final",resultados)
     # Mostrar resultados
     st.subheader(f"📋 Resultados de la búsqueda ({len(resultados)} encontrados)")
     
@@ -189,7 +192,7 @@ def ver_medicamentos():
                 'Nombre': m['nombre'],
                 'Laboratorio': m.get('laboratorio', 'N/A'),
                 'Principio Activo': m.get('principio_activo', 'N/A'),
-                'Precio': f"${m.get('precio', 0):.2f}",
+                'Precio': f"${m.get('precio_venta', 0):.2f}",
                 'Stock': m.get('stock', 0),
                 'Stock Mínimo': m.get('stock_minimo', 0)
             } for m in resultados])
@@ -229,7 +232,7 @@ def ver_medicamentos():
     else:
         st.warning("No se encontraron medicamentos que coincidan con los criterios de búsqueda.")
         if st.button("Mostrar todos los medicamentos"):
-            st.experimental_rerun()
+            st.rerun()
 
 # Para usar en la app principal:
 # ver_medicamentos()

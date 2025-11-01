@@ -13,14 +13,14 @@ def login():
             db = Database()
             user = db.get_usuario_por_username(username)
             
-            if user and db.check_password(password, user['password_hash']):
+            if user and db.check_password(password, user['contrasena_hash']):
                 st.session_state['logged_in'] = True
                 st.session_state['user'] = {
                     'id': user['id'],
-                    'username': user['username'],
+                    'username': user['usuario'],
                     'perfil': user['perfil']
                 }
-                st.success(f"Bienvenido, {user['username']}!")
+                st.success(f"Bienvenido, {user['usuario']}!")
                 st.rerun()  # ✅ actualizado
             else:
                 st.error("Usuario o contraseña incorrectos")

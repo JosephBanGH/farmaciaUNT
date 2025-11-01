@@ -2,7 +2,7 @@ import streamlit as st
 from models.modelo import Database
 from datetime import datetime
 
-def gestion_inventario():
+def gestion_inventario(usuario_id):
     st.header("Gestión de Inventario")
     
     db = Database()
@@ -20,7 +20,7 @@ def gestion_inventario():
                     with st.expander(f"{med['nombre']} - {med['numero_lote']} - Stock: {med['cantidad_actual']}"):
                         st.write(f"**Principio Activo:** {med['principio_activo']}")
                         st.write(f"**Laboratorio:** {med['laboratorio']}")
-                        st.write(f"**Precio:** ${med['precio']:.2f}")
+                        st.write(f"**Precio:** ${med['precio_venta']:.2f}")
                         st.write(f"**Proveedor:** {med['proveedor']}")
                         st.write(f"**Stock Mínimo:** {med['stock_minimo']}")
                         st.write(f"**Lote:** {med['numero_lote']}")
@@ -51,7 +51,8 @@ def gestion_inventario():
             descripcion = st.text_area("Descripción")
             principio_activo = st.text_input("Principio Activo")
             laboratorio = st.text_input("Laboratorio")
-            precio = st.number_input("Precio", min_value=0.0, format="%.2f")
+            precio_v = st.number_input("Precio Venta", min_value=0.0, format="%.2f")
+            precio_c = st.number_input("Precio Compra", min_value=0.0, format="%.2f")
             stock_minimo = st.number_input("Stock Mínimo", min_value=0, value=10)
 
             st.write("### Información del Lote")
@@ -63,8 +64,8 @@ def gestion_inventario():
             submitted = st.form_submit_button("Guardar Medicamento con Lote")
             if submitted:
                 if db.insert_medicamento_con_lote(
-                    nombre, descripcion, principio_activo, laboratorio, precio, stock_minimo,
-                    numero_lote, proveedor_id, stock, fecha_vencimiento
+                    nombre, descripcion, principio_activo, laboratorio, precio_v, precio_c, stock_minimo,
+                    numero_lote, proveedor_id, stock, fecha_vencimiento, usuario_id
                 ):
                     st.success("Medicamento y lote agregado correctamente")
                 else:
