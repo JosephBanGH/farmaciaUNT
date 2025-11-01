@@ -67,7 +67,7 @@ def main():
         from views.menu.ver_medicamentos import ver_medicamentos
         ver_medicamentos()
     elif selected == "Inventario":
-        gestion_inventario()
+        gestion_inventario(st.session_state['user']['id'])
     
     elif selected == "Punto de Venta":
         punto_venta()

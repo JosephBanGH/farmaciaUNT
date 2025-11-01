@@ -18,7 +18,7 @@ class Database:
             m.descripcion,
             m.principio_activo,
             m.laboratorio,
-            m.precio,
+            m.precio_venta,
             m.stock,
             m.stock_minimo,
             l.id AS lote_id,
@@ -53,25 +53,25 @@ class Database:
         """
         query = "DELETE FROM lotes WHERE id = %s"
         return self.execute_update(query, (lote_id,))
-    def insert_medicamento_con_lote(self, nombre, descripcion, principio_activo, laboratorio, precio, stock_minimo,
-                                    numero_lote, proveedor_id, cantidad_inicial, fecha_vencimiento):
+    def insert_medicamento_con_lote(self, nombre, descripcion, principio_activo, laboratorio, precio_v, precio_c, stock_minimo,
+                                    numero_lote, proveedor_id, cantidad_inicial, fecha_vencimiento, usuario_id):
         try:
             cursor = self.connection.cursor()
 
             # 1. Insertar medicamento
             insert_med = """
-            INSERT INTO medicamentos (nombre, descripcion, principio_activo, laboratorio, precio, stock, stock_minimo)
+            INSERT INTO medicamentos (nombre, descripcion, principio_activo, laboratorio, precio_venta, precio_compra , stock, stock_minimo)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
             """
             cursor.execute(insert_med, (
-                nombre, descripcion, principio_activo, laboratorio, precio, cantidad_inicial, stock_minimo
+                nombre, descripcion, principio_activo, laboratorio, precio_venta, precio_compra, cantidad_inicial, stock_minimo
             ))
             medicamento_id = cursor.lastrowid  # id generado
 
             # 2. Insertar lote asociado
             self.execute_update(
             'sp_INGRESAR_LOTE',
-                (medicamento_id, proveedor_id, numero_lote, fecha_vencimiento, cantidad_inicial, cantidad_inicial),
+                (medicamento_id, proveedor_id, numero_lote, fecha_vencimiento, cantidad_inicial, usuario_id),
                 True
             )
 
@@ -88,11 +88,11 @@ class Database:
     def connect(self):
         try:
             self.connection = mysql.connector.connect(
-                host=os.getenv("MYSQLHOST", "xxx"),
-                database=os.environ.get("xxx"),
-                user=os.getenv("MYSQLUSER", "x"),
-                password=os.getenv("MYSQLPASSWORD"),
-                port=int(os.getenv("MYSQLPORT", x))
+                host=os.getenv("MYSQLHOST", "localhost"),
+                database=os.environ.get("MYSQLDATABASE","soft_farmacian"),
+                user=os.getenv("MYSQLUSER", "root"),
+                password=os.getenv("MYSQLPASSWORD","12345"),
+                port=int(os.getenv("MYSQLPORT", 3306))
             )
             if self.connection.is_connected():
                 db_info = self.connection.get_server_info()
@@ -168,12 +168,12 @@ class Database:
     # -------------------------
     # Stored Procedures
     # -------------------------
-    def sp_crear_usuario(self, username, password, email, perfil):
+    def sp_crear_usuario(self, username, nombres, apellidos, password, email, perfil):
         """Crea usuario con hash bcrypt"""
         hashed_password = self.hash_password(password)
         return self.execute_update(
             'sp_crear_usuario',
-            (username, hashed_password, email, perfil),
+            (username, nombres, apellidos, hashed_password, email, perfil),
             True
         )
     def sp_actualizar_usuario(self, username, email, perfil):
@@ -221,7 +221,7 @@ class Database:
     # Métodos de consulta
     # -------------------------
     def get_usuario_por_username(self, username):
-        query = "SELECT * FROM usuarios WHERE username = %s AND activo = TRUE"
+        query = "SELECT * FROM usuarios WHERE usuario = %s AND activo = TRUE"
         result = self.execute_query(query, (username,))
         return result[0] if result else None
     

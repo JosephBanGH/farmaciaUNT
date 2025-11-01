@@ -12,7 +12,7 @@ def perfil():
 
     st.subheader("Actualizar Información")
     with st.form("registro_form"):
-        username = st.text_input("Usuario", value=usuario['username'])
+        username = st.text_input("Usuario", value=usuario['usuario'])
         email = st.text_input("Correo", value=usuario['email'])
         password = st.text_input("Contraseña", type="password")
         perfil_selected = st.selectbox("Perfil", ["Administrador", "Farmacéutico", "Cajero", "Cliente"], index=["Administrador", "Farmacéutico", "Cajero", "Cliente"].index(st.session_state['user']['perfil']))
@@ -70,9 +70,9 @@ def administracion():
                     st.error("Error al crear el usuario")
         
         st.subheader("Usuarios Existentes")
-        usuarios = db.execute_query("SELECT * FROM usuarios WHERE activo = TRUE ORDER BY username")
+        usuarios = db.execute_query("SELECT * FROM usuarios WHERE activo = TRUE ORDER BY usuario")
         for usuario in usuarios:
-            st.write(f"**{usuario['username']}** - {usuario['perfil']} - {usuario['email']}")
+            st.write(f"**{usuario['usuario']}** - {usuario['perfil']} - {usuario['email']}")
     
     with tab2:
         st.subheader("Gestión de Proveedores")

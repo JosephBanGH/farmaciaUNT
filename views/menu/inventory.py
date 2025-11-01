@@ -2,7 +2,7 @@ import streamlit as st
 from models.modelo import Database
 from datetime import datetime
 
-def gestion_inventario():
+def gestion_inventario(usuario_id):
     st.header("Gestión de Inventario")
     
     db = Database()
@@ -20,7 +20,7 @@ def gestion_inventario():
                     with st.expander(f"{med['nombre']} - {med['numero_lote']} - Stock: {med['cantidad_actual']}"):
                         st.write(f"**Principio Activo:** {med['principio_activo']}")
                         st.write(f"**Laboratorio:** {med['laboratorio']}")
-                        st.write(f"**Precio:** ${med['precio']:.2f}")
+                        st.write(f"**Precio:** ${med['precio_venta']:.2f}")
                         st.write(f"**Proveedor:** {med['proveedor']}")
                         st.write(f"**Stock Mínimo:** {med['stock_minimo']}")
                         st.write(f"**Lote:** {med['numero_lote']}")
@@ -63,8 +63,8 @@ def gestion_inventario():
             submitted = st.form_submit_button("Guardar Medicamento con Lote")
             if submitted:
                 if db.insert_medicamento_con_lote(
-                    nombre, descripcion, principio_activo, laboratorio, precio, stock_minimo,
-                    numero_lote, proveedor_id, stock, fecha_vencimiento
+                    nombre, descripcion, principio_activo, laboratorio, precio_v, precio_c, stock_minimo,
+                    numero_lote, proveedor_id, stock, fecha_vencimiento, usuario_id
                 ):
                     st.success("Medicamento y lote agregado correctamente")
                 else:
