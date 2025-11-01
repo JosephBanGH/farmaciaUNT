@@ -7,12 +7,12 @@ SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- Crear base de datos
-DROP DATABASE IF EXISTS farmacia_db_mejorada;
-CREATE DATABASE farmacia_db_mejorada 
+DROP DATABASE IF EXISTS soft_farmacian;
+CREATE DATABASE soft_farmacian 
 DEFAULT CHARACTER SET utf8mb4 
 COLLATE utf8mb4_unicode_ci;
 
-USE farmacia_db_mejorada;
+USE soft_farmacian;
 
 -- Tabla de usuarios
 CREATE TABLE IF NOT EXISTS `usuarios` (
@@ -234,7 +234,7 @@ CREATE TABLE IF NOT EXISTS `comprobantes` (
 -- Tabla de movimientos de inventario
 CREATE TABLE IF NOT EXISTS `movimientos_inventario` (
     `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    `tipo_movimiento` ENUM('entrada', 'salida', 'ajuste', 'devolucion', 'perdida') NOT NULL,
+    `tipo` ENUM('entrada', 'salida', 'ajuste', 'devolucion', 'perdida') NOT NULL,
     `medicamento_id` INT UNSIGNED NOT NULL,
     `lote_id` INT UNSIGNED,
     `cantidad` INT NOT NULL,
@@ -406,10 +406,13 @@ BEGIN
     END IF;
 END//
 
+
+
 -- Actualizar stock al modificar un detalle de venta
 CREATE TRIGGER `tr_detalle_venta_update` AFTER UPDATE ON `detalles_venta`
 FOR EACH ROW
 BEGIN
+	DECLARE diferencia INT;
     -- Si cambió el medicamento o el lote, revertir el stock anterior
     IF OLD.medicamento_id != NEW.medicamento_id OR OLD.lote_id != NEW.lote_id THEN
         -- Revertir stock anterior
@@ -438,9 +441,8 @@ BEGIN
             WHERE id = NEW.lote_id;
         END IF;
     -- Si solo cambió la cantidad
-    ELSIF OLD.cantidad != NEW.cantidad THEN
+    ELSEIF OLD.cantidad != NEW.cantidad THEN
         -- Calcular la diferencia
-        DECLARE diferencia INT;
         SET diferencia = OLD.cantidad - NEW.cantidad;
         
         -- Ajustar stock según la diferencia
@@ -490,32 +492,3 @@ BEGIN
 END//
 
 DELIMITER ;
-
--- Insertar datos iniciales
--- Insertar usuario administrador por defecto (contraseña: admin123)
-INSERT INTO `usuarios` (`usuario`, `contrasena_hash`, `email`, `nombres`, `apellidos`, `perfil`, `activo`) 
-VALUES ('admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin@farmacia.com', 'Administrador', 'del Sistema', 'Administrador', 1);
-
--- Insertar categorías de productos
-INSERT INTO `categorias` (`nombre`, `descripcion`) VALUES
-('Analgésicos', 'Medicamentos para el alivio del dolor'),
-('Antibióticos', 'Medicamentos para tratar infecciones bacterianas'),
-('Antiinflamatorios', 'Medicamentos para reducir la inflamación'),
-('Antialérgicos', 'Medicamentos para tratar alergias'),
-('Vitaminas', 'Suplementos vitamínicos y minerales');
-
--- Insertar proveedores
-INSERT INTO `proveedores` (`nombre`, `contacto`, `telefono`, `email`, `direccion`, `ruc`, `activo`) VALUES
-('Farmacéutica Nacional S.A.', 'Juan Pérez', '987654321', 'jperez@farmaceutica.com', 'Av. Principal 123, Lima', '20123456789', 1),
-('Laboratorios Salud S.A.C.', 'María Gómez', '987654322', 'mgomez@salud.com', 'Calle Los Pinos 456, Lima', '20123456780', 1),
-('Distribuidora Médica E.I.R.L.', 'Carlos López', '987654323', 'clopez@dime.com.pe', 'Jr. San Martín 789, Lima', '20123456781', 1);
-
--- Establecer permisos
-GRANT ALL PRIVILEGES ON farmacia_db_mejorada.* TO 'tu_usuario'@'localhost' IDENTIFIED BY 'tu_contraseña';
-FLUSH PRIVILEGES;
-
--- Habilitar verificación de claves foráneas
-SET FOREIGN_KEY_CHECKS = 1;
-
--- Mensaje de éxito
-SELECT 'Base de datos creada exitosamente' AS mensaje;

@@ -53,7 +53,7 @@ class Database:
         """
         query = "DELETE FROM lotes WHERE id = %s"
         return self.execute_update(query, (lote_id,))
-    def insert_medicamento_con_lote(self, nombre, descripcion, principio_activo, laboratorio, precio_v, precio_c, stock_minimo,
+    def insert_medicamento_con_lote(self, nombre, descripcion, principio_activo, laboratorio, precio_venta, precio_compra, stock_minimo,
                                     numero_lote, proveedor_id, cantidad_inicial, fecha_vencimiento, usuario_id):
         try:
             cursor = self.connection.cursor()
@@ -61,7 +61,7 @@ class Database:
             # 1. Insertar medicamento
             insert_med = """
             INSERT INTO medicamentos (nombre, descripcion, principio_activo, laboratorio, precio_venta, precio_compra , stock, stock_minimo)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """
             cursor.execute(insert_med, (
                 nombre, descripcion, principio_activo, laboratorio, precio_venta, precio_compra, cantidad_inicial, stock_minimo
@@ -71,7 +71,7 @@ class Database:
             # 2. Insertar lote asociado
             self.execute_update(
             'sp_INGRESAR_LOTE',
-                (medicamento_id, proveedor_id, numero_lote, fecha_vencimiento, cantidad_inicial, usuario_id),
+                (medicamento_id, proveedor_id, numero_lote, fecha_vencimiento, precio_compra, cantidad_inicial, usuario_id),
                 True
             )
 
@@ -98,7 +98,6 @@ class Database:
                 db_info = self.connection.get_server_info()
                 print(f"✅ Conectado a MySQL Server versión {db_info}")
         except Error as e:
-            print(os.getenv("MYSQLPASSWORD"),'rxctvybyunimo--------------------------------------------------')
             print(f"❌ Error al conectar a MySQL: {e}")
             st.error(f"Error de conexión a la base de datos: {e}")
 
@@ -256,7 +255,7 @@ class Database:
     
     def get_movimientos_inventario(self):
         query = """
-        SELECT mi.*, m.nombre as medicamento_nombre, u.username as usuario_nombre
+        SELECT mi.*, m.nombre as medicamento_nombre, u.usuario as usuario_nombre
         FROM movimientos_inventario mi
         INNER JOIN medicamentos m ON mi.medicamento_id = m.id
         INNER JOIN usuarios u ON mi.usuario_id = u.id

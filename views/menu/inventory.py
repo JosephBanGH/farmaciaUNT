@@ -51,7 +51,8 @@ def gestion_inventario(usuario_id):
             descripcion = st.text_area("Descripción")
             principio_activo = st.text_input("Principio Activo")
             laboratorio = st.text_input("Laboratorio")
-            precio = st.number_input("Precio", min_value=0.0, format="%.2f")
+            precio_v = st.number_input("Precio Venta", min_value=0.0, format="%.2f")
+            precio_c = st.number_input("Precio Compra", min_value=0.0, format="%.2f")
             stock_minimo = st.number_input("Stock Mínimo", min_value=0, value=10)
 
             st.write("### Información del Lote")
