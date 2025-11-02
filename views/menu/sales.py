@@ -60,7 +60,7 @@ def punto_venta():
                 st.write(f"{item['nombre']} x{item['cantidad']} = ${subtotal:.2f}")
             
             st.write(f"**Total: ${total:.2f}**")
-            
+            """
             #----------------------------------------
             # Información del cliente
             st.subheader("Datos del Cliente")
@@ -190,6 +190,7 @@ def punto_venta():
                             st.error("Error: No se pudo obtener el ID de la venta")
                     else:
                         st.error("Error al procesar la venta")
+            """
             
             if st.button("Vaciar Carrito"):
                 st.session_state['carrito'] = []

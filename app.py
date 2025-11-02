@@ -8,7 +8,7 @@ from views.user.registro import registro   # importar el registro
 from views.user.users import perfil,administracion
 from views.menu.reports import dashboard, reportes_ventas
 from controladores.controlador import verificar_base_datos
-from views.menu.pagos import mostrar_historial_pagos
+from views.menu.pagos import pagos_main
 
 def main():
     # Configuración de la página
@@ -83,8 +83,8 @@ def main():
         administracion()
         
     elif selected == "Pagos":
-        mostrar_historial_pagos()
-
+        pagos_main()
+        
 if __name__ == "__main__":
     main()
 
