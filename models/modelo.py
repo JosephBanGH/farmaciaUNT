@@ -270,7 +270,7 @@ class Database:
     
     def get_ventas_recientes(self, limit=10):
         query = """
-        SELECT v.*, u.username as vendedor, c.username as cliente
+        SELECT v.*, u.usuario as vendedor, c.usuario as cliente
         FROM ventas v
         INNER JOIN usuarios u ON v.usuario_id = u.id
         LEFT JOIN usuarios c ON v.cliente_id = c.id
@@ -282,7 +282,7 @@ class Database:
     def get_venta_por_id(self, venta_id):
         """Obtiene los detalles de una venta específica"""
         query = """
-        SELECT v.*, u.username as vendedor, c.username as cliente
+        SELECT v.*, u.usuario as vendedor, c.usuario as cliente
         FROM ventas v
         INNER JOIN usuarios u ON v.usuario_id = u.id
         LEFT JOIN usuarios c ON v.cliente_id = c.id
@@ -306,23 +306,32 @@ class Database:
         Registra un comprobante emitido en la base de datos
         tipo_comprobante: 'boleta' o 'factura'
         """
+        # Separar serie y número del comprobante
+        partes = numero_comprobante.split('-')
+        if len(partes) == 2:
+            serie, numero = partes
+        else:
+            # Fallback: si no tiene formato esperado
+            serie = tipo_comprobante.upper()[:1] + "001"
+            numero = numero_comprobante
         query = """
-        INSERT INTO comprobantes (venta_id, tipo_comprobante, numero_comprobante, ruta_archivo, fecha_emision)
-        VALUES (%s, %s, %s, %s, NOW())
+        INSERT INTO comprobantes (venta_id, tipo_comprobante, serie, numero, ruta_archivo, fecha_emision)
+        VALUES (%s, %s, %s, %s, %s, NOW())
         """
-        return self.execute_update(query, (venta_id, tipo_comprobante, numero_comprobante, ruta_archivo))
+        return self.execute_update(query, (venta_id, tipo_comprobante, serie, numero, ruta_archivo))
     
     def get_ultimo_numero_comprobante(self, tipo):
         """
         Obtiene el último número de comprobante emitido
         tipo: 'boleta' o 'factura'
         """
+        serie = 'B001' if tipo == 'boleta' else 'F001'
         query = """
-        SELECT MAX(CAST(SUBSTRING_INDEX(numero_comprobante, '-', -1) AS UNSIGNED)) as ultimo_numero
+        SELECT MAX(CAST(numero AS UNSIGNED)) as ultimo_numero
         FROM comprobantes
-        WHERE tipo_comprobante = %s
+        WHERE tipo_comprobante = %s AND serie = %s
         """
-        result = self.execute_query(query, (tipo,))
+        result = self.execute_query(query, (tipo,serie))
         if result and result[0]['ultimo_numero']:
             return result[0]['ultimo_numero']
         return 0
@@ -330,7 +339,7 @@ class Database:
     def get_comprobantes(self, limit=50):
         """Obtiene la lista de comprobantes emitidos"""
         query = """
-        SELECT c.*, v.total, u.username as vendedor
+        SELECT c.*, v.total, u.usuario as vendedor
         FROM comprobantes c
         INNER JOIN ventas v ON c.venta_id = v.id
         INNER JOIN usuarios u ON v.usuario_id = u.id

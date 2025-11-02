@@ -295,9 +295,10 @@ def mostrar_historial_pagos():
         c.id,
         c.fecha_emision,
         c.tipo_comprobante,
-        c.numero_comprobante,
-        CONCAT(u.username) as cajero,
-        CONCAT(cl.nombres, ' ', cl.apellidos) as cliente
+        CONCAT(c.serie, '-', c.numero) as numero_comprobante,
+        u.usuario as cajero,
+        CONCAT(cl.nombres, ' ', cl.apellidos) as cliente,
+        v.total
     FROM comprobantes c
     INNER JOIN ventas v on v.id = c.venta_id
     JOIN usuarios u ON v.usuario_id = u.id
