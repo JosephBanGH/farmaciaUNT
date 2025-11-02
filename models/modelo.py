@@ -356,6 +356,142 @@ class Database:
         result = self.execute_query(query, (venta_id,))
         return result[0] if result else None
     
+    # -------------------------
+    # Métodos para HU9 - Reportes de Ventas
+    # -------------------------
+    
+    def get_productos_mas_vendidos(self, fecha_inicio, fecha_fin, limit=10):
+        """Obtiene los productos más vendidos en un rango de fechas"""
+        query = """
+        SELECT 
+            m.id,
+            m.nombre,
+            m.laboratorio,
+            SUM(dv.cantidad) as cantidad_vendida,
+            SUM(dv.total) as total_vendido,
+            COUNT(DISTINCT dv.venta_id) as num_ventas
+        FROM detalles_venta dv
+        INNER JOIN medicamentos m ON dv.medicamento_id = m.id
+        INNER JOIN ventas v ON dv.venta_id = v.id
+        WHERE DATE(v.fecha_venta) BETWEEN %s AND %s
+            AND v.estado = 'completada'
+        GROUP BY m.id, m.nombre, m.laboratorio
+        ORDER BY cantidad_vendida DESC
+        LIMIT %s
+        """
+        return self.execute_query(query, (fecha_inicio, fecha_fin, limit))
+    
+    def get_ventas_por_farmaceutico(self, fecha_inicio, fecha_fin):
+        """Obtiene las ventas agrupadas por farmacéutico"""
+        query = """
+        SELECT 
+            u.id,
+            CONCAT(u.nombres, ' ', u.apellidos) as farmaceutico,
+            COUNT(v.id) as num_ventas,
+            SUM(v.total) as total_vendido,
+            AVG(v.total) as ticket_promedio
+        FROM ventas v
+        INNER JOIN usuarios u ON v.usuario_id = u.id
+        WHERE DATE(v.fecha_venta) BETWEEN %s AND %s
+            AND v.estado = 'completada'
+        GROUP BY u.id, farmaceutico
+        ORDER BY total_vendido DESC
+        """
+        return self.execute_query(query, (fecha_inicio, fecha_fin))
+    
+    def get_ventas_por_dia(self, fecha_inicio, fecha_fin):
+        """Obtiene las ventas agrupadas por día"""
+        query = """
+        SELECT 
+            DATE(fecha_venta) as fecha,
+            COUNT(id) as num_ventas,
+            SUM(total) as total_vendido,
+            AVG(total) as ticket_promedio
+        FROM ventas
+        WHERE DATE(fecha_venta) BETWEEN %s AND %s
+            AND estado = 'completada'
+        GROUP BY DATE(fecha_venta)
+        ORDER BY fecha
+        """
+        return self.execute_query(query, (fecha_inicio, fecha_fin))
+    
+    def get_productos_bajo_stock(self):
+        """Obtiene productos con stock bajo o crítico"""
+        query = """
+        SELECT 
+            id,
+            nombre,
+            laboratorio,
+            stock,
+            stock_minimo,
+            precio_venta,
+            CASE 
+                WHEN stock = 0 THEN 'CRÍTICO'
+                WHEN stock <= stock_minimo * 0.5 THEN 'MUY BAJO'
+                WHEN stock <= stock_minimo THEN 'BAJO'
+                ELSE 'NORMAL'
+            END as nivel_alerta
+        FROM medicamentos
+        WHERE activo = TRUE AND stock <= stock_minimo
+        ORDER BY stock ASC, stock_minimo DESC
+        """
+        return self.execute_query(query)
+    
+    def get_movimientos_inventario_filtrado(self, fecha_inicio=None, fecha_fin=None, tipo=None, medicamento_id=None):
+        """Obtiene movimientos de inventario con filtros opcionales"""
+        query = """
+        SELECT 
+            mi.id,
+            mi.tipo,
+            mi.cantidad,
+            mi.motivo,
+            mi.fecha_movimiento,
+            m.nombre as medicamento,
+            m.laboratorio,
+            CONCAT(u.nombres, ' ', u.apellidos) as usuario,
+            l.numero_lote
+        FROM movimientos_inventario mi
+        INNER JOIN medicamentos m ON mi.medicamento_id = m.id
+        INNER JOIN usuarios u ON mi.usuario_id = u.id
+        LEFT JOIN lotes l ON mi.lote_id = l.id
+        WHERE 1=1
+        """
+        params = []
+        
+        if fecha_inicio and fecha_fin:
+            query += " AND DATE(mi.fecha_movimiento) BETWEEN %s AND %s"
+            params.extend([fecha_inicio, fecha_fin])
+        
+        if tipo:
+            query += " AND mi.tipo = %s"
+            params.append(tipo)
+        
+        if medicamento_id:
+            query += " AND mi.medicamento_id = %s"
+            params.append(medicamento_id)
+        
+        query += " ORDER BY mi.fecha_movimiento DESC LIMIT 500"
+        
+        return self.execute_query(query, tuple(params) if params else None)
+    
+    def get_resumen_ventas(self, fecha_inicio, fecha_fin):
+        """Obtiene resumen ejecutivo de ventas"""
+        query = """
+        SELECT 
+            COUNT(id) as total_transacciones,
+            SUM(total) as total_ventas,
+            AVG(total) as ticket_promedio,
+            SUM(impuesto) as total_impuestos,
+            SUM(descuento) as total_descuentos,
+            MIN(total) as venta_minima,
+            MAX(total) as venta_maxima
+        FROM ventas
+        WHERE DATE(fecha_venta) BETWEEN %s AND %s
+            AND estado = 'completada'
+        """
+        result = self.execute_query(query, (fecha_inicio, fecha_fin))
+        return result[0] if result else None
+    
     def close(self):
         if self.connection and self.connection.is_connected():
             self.connection.close()
